@@ -5,7 +5,8 @@ import solara
 from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
 from mesa.visualization import SolaraViz, make_space_component
-from model import RobotModel, RobotAgent
+from model import RobotModel
+from agents import RobotAgent, GreenAgent, YellowAgent, RedAgent
 from objects import WasteDisposalZone, WasteAgent
 
 #from model import
