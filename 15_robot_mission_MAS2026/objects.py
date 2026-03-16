@@ -1,5 +1,7 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
+from re import M
+
 import mesa
 from model import RobotModel
 import random
@@ -9,18 +11,21 @@ class Radioactivity(mesa.Agent):
         super().__init__(model)
         self.zone = zone
         
-        if self.zone == "z1" or self.zone == "green":
+        if self.zone == "z1":
             self.radioactivity_level = random.uniform(0, 0.33)
-        elif self.zone == "z2" or self.zone == "yellow":
+        elif self.zone == "z2" :
             self.radioactivity_level = random.uniform(0.34, 0.66)
-        elif self.zone == "z3" or self.zone == "red":
+        elif self.zone == "z3" :
             self.radioactivity_level = random.uniform(0.67, 1.0)
         else:
             self.radioactivity_level = 0
 
 class WasteDisposalZone(mesa.Agent):
     def __init__(self, model):
-        super()
+        super().__init__(model)
+        height = model.height
+        pos_waste_disposal = random.randint(0, height-1)
+        self.pos = (model.width-1, pos_waste_disposal)
 
 
 
