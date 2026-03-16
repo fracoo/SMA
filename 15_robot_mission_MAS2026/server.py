@@ -4,9 +4,9 @@ import mesa
 import solara
 from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
-from mesa.visualization import SolaraViz, make_plot_component, make_space_component
-from mesa.visualization.utils import update_counter
-from model import RobotModel
+from mesa.visualization import SolaraViz, make_space_component
+from model import RobotModel, RobotAgent
+from objects import WasteDisposalZone
 
 #from model import
 
@@ -17,8 +17,14 @@ _COLOR_MAP = {
 }
 
 def agent_portrayal(agent):
-    color = _COLOR_MAP.get(agent.color, to_rgba("tab:blue"))
-    return {"size": 10, "color": color}
+    if isinstance(agent, RobotAgent):
+        color = _COLOR_MAP.get(agent.color, to_rgba("tab:blue"))
+        return {"size": 10, "color": color}
+    elif isinstance(agent, WasteDisposalZone):
+        return {"size": 10, "color": to_rgba("tab:blue")}
+    else:
+        return {"size": 0, "color": (0, 0, 0, 0)}
+
 
 # @solara.component
 # def Histogram(model):
