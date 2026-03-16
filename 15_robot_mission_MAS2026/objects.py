@@ -25,7 +25,7 @@ class WasteDisposalZone(mesa.Agent):
         super().__init__(model)
         height = model.height
         pos_waste_disposal = random.randint(0, height-1)
-        self.pos = (model.width-1, pos_waste_disposal)
+        self.position = (model.width-1, pos_waste_disposal)
 
 
 

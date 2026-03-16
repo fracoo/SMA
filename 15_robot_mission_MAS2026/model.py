@@ -1,7 +1,7 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
 import mesa
-from objects import Radioactivity
+from objects import Radioactivity, WasteDisposalZone
 
 class RobotAgent(mesa.Agent):
     "An Agent with fixed initial color"
@@ -72,6 +72,10 @@ class RobotModel(mesa.Model):
                     zone = "z3"
                 radioactivity_agent = Radioactivity(self, zone)
                 self.grid.place_agent(radioactivity_agent, (i, j))
+        
+        #Create Waste Disposal Zone Agents (one for the whole grid)
+        waste_disposal_zone_agent = WasteDisposalZone(self)
+        self.grid.place_agent(waste_disposal_zone_agent, waste_disposal_zone_agent.position)
     
     def step(self):
         """Advance the model by one step."""
