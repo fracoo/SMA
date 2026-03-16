@@ -1,36 +1,8 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
 import mesa
-from objects import Radioactivity, WasteAgent, WasteDisposalZone
-import random
-
-class RobotAgent(mesa.Agent):
-    "An Agent with fixed initial color"
-
-    def __init__(self, model: 'RobotModel', color="green"): #on pourrait aussi ajouter un id pour différencier les agents
-        super().__init__(model)
-        self.color = color
-    
-    def move(self):
-        possible_steps = self.model.grid.get_neighborhood( # type: ignore
-            self.pos,
-            moore=False, # False car seulement les 4 cases orthogonales sont accessibles
-            include_center=False
-        )
-        #check that neighborhood is not jumping over the grid limits
-        allowed_steps = []
-        for step in possible_steps:
-            if not (self.pos[0] == 0 and step[0] == self.model.grid.width - 1) and not (self.pos[0] == self.model.grid.width - 1 and step[0] == 0) and not (self.pos[1] == 0 and step[1] == self.model.grid.height - 1) and not (self.pos[1] == self.model.grid.height - 1 and step[1] == 0): # type: ignore
-                allowed_steps.append(step)
-        
-        new_position = self.random.choice(allowed_steps)
-        self.model.grid.move_agent(self, new_position) # type: ignore
-
-    def step(self):
-        """One step of the agent."""
-        self.move()
-
-
+from objects import Radioactivity, WasteDisposalZone
+from agents import GreenAgent, YellowAgent, RedAgent
 
 
 class RobotModel(mesa.Model):
@@ -51,9 +23,9 @@ class RobotModel(mesa.Model):
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
         #Create Robot Agents
-        agents = [RobotAgent(self, color="green") for _ in range(n_green)]
-        agents += [RobotAgent(self, color="yellow") for _ in range(n_yellow)]
-        agents += [RobotAgent(self, color="red") for _ in range(n_red)]
+        agents = [GreenAgent(self) for _ in range(n_green)]
+        agents += [YellowAgent(self) for _ in range(n_yellow)]
+        agents += [RedAgent(self) for _ in range(n_red)]
 
         # Create x and y positions for agents
         x = self.rng.integers(0, self.grid.width, size=(n_green + n_yellow + n_red,))
