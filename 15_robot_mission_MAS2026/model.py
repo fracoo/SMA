@@ -1,7 +1,8 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
 import mesa
-from objects import Radioactivity, WasteDisposalZone
+import random
+from objects import Radioactivity, WasteDisposalZone, WasteAgent
 from agents import GreenAgent, YellowAgent, RedAgent
 
 
@@ -58,16 +59,16 @@ class RobotModel(mesa.Model):
             y = self.random.randrange(self.grid.height)
             pos_waste = (x, y)
             contenu_case = self.grid.get_cell_list_contents([pos_waste])
-            radioactivity_agent = None
+            radioactivity_agent: Radioactivity | None = None
             for agent in contenu_case:
                 if isinstance(agent, Radioactivity):
                     radioactivity_agent = agent
                     break
-            if radioactivity_agent.radioactivity_level < 0.34:
+            if radioactivity_agent and radioactivity_agent.radioactivity_level < 0.34:
                 waste_type = "green"
-            elif radioactivity_agent.radioactivity_level < 0.68:
+            elif radioactivity_agent and radioactivity_agent.radioactivity_level < 0.68:
                 waste_type = "yellow"
-            else :
+            elif radioactivity_agent:
                 waste_type = "red"
             waste_obj = WasteAgent(self, waste_type)
             self.grid.place_agent(waste_obj, pos_waste)
