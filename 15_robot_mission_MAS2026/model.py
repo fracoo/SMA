@@ -15,7 +15,13 @@ class RobotAgent(mesa.Agent):
             moore=False, # False car seulement les 4 cases orthogonales sont accessibles
             include_center=False
         )
-        new_position = self.random.choice(possible_steps)
+        #check that neighborhood is not jumping over the grid limits
+        allowed_steps = []
+        for step in possible_steps:
+            if not (self.pos[0] == 0 and step[0] == self.model.grid.width - 1) and not (self.pos[0] == self.model.grid.width - 1 and step[0] == 0) and not (self.pos[1] == 0 and step[1] == self.model.grid.height - 1) and not (self.pos[1] == self.model.grid.height - 1 and step[1] == 0): # type: ignore
+                allowed_steps.append(step)
+        
+        new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
 
     def step(self):
@@ -55,7 +61,8 @@ class RobotModel(mesa.Model):
             self.grid.place_agent(a, (i, j))
     
     def step(self):
-        print("Step ")
+        """Advance the model by one step."""
+        self.agents.shuffle_do("step")
 
 
 
