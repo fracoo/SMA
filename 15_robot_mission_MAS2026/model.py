@@ -39,7 +39,7 @@ class RobotModel(mesa.Model):
         self.grid = mesa.space.MultiGrid(width, height, True)
 
         #Create Agents
-        agents = []
+        agents = [RobotAgent(self) for _ in range(n)]
 
         # Create x and y positions for agents
         x = self.rng.integers(0, self.grid.width, size=(n,))

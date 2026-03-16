@@ -5,17 +5,18 @@ import solara
 from matplotlib.figure import Figure
 from mesa.visualization import SolaraViz, make_plot_component, make_space_component
 from mesa.visualization.utils import update_counter
+from model import RobotModel
 
 #from model import
 
 
 def agent_portrayal(agent):
     size = 10
-    if agent.type == "green" :
+    if agent.color == "green":
         color = "tab:green"
-    if agent.type == "yellow":
+    elif agent.color == "yellow":
         color = "tab:yellow"
-    if agent.type == "red":
+    else:
         color = "tab:red"
     return {"size": size, "color": color}
 
@@ -33,7 +34,7 @@ def agent_portrayal(agent):
 #     solara.FigureMatplotlib(fig)
 
 model_params = {
-    "n_green": {
+    "n": {
         "type": "SliderInt",
         "value": 50,
         "label": "Number of green robots :",
@@ -41,22 +42,22 @@ model_params = {
         "max": 100,
         "step": 1,
     },
-    "n_yellow": {
-        "type": "SliderInt",
-        "value": 50,
-        "label": "Number of yellow robots :",
-        "min": 1,
-        "max": 100,
-        "step": 1,
-    },
-    "n_red": {
-        "type": "SliderInt",
-        "value": 50,
-        "label": "Number of red robots :",
-        "min": 1,
-        "max": 100,
-        "step": 1,
-    },
+    # "n_yellow": {
+    #     "type": "SliderInt",
+    #     "value": 50,
+    #     "label": "Number of yellow robots :",
+    #     "min": 1,
+    #     "max": 100,
+    #     "step": 1,
+    # },
+    # "n_red": {
+    #     "type": "SliderInt",
+    #     "value": 50,
+    #     "label": "Number of red robots :",
+    #     "min": 1,
+    #     "max": 100,
+    #     "step": 1,
+    # },
     "width": {
         "type": "SliderInt",
         "value": 30,
@@ -76,7 +77,7 @@ model_params = {
 }
 
 # Create initial model instance
-# model1 = MoneyModel(50, 10, 10)
+model1 = RobotModel(1, 10, 30)
 
 SpaceGraph = make_space_component(agent_portrayal)
 
