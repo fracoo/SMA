@@ -3,22 +3,22 @@
 import mesa
 import solara
 from matplotlib.figure import Figure
+from matplotlib.colors import to_rgba
 from mesa.visualization import SolaraViz, make_plot_component, make_space_component
 from mesa.visualization.utils import update_counter
 from model import RobotModel
 
 #from model import
 
+_COLOR_MAP = {
+    "green": to_rgba("tab:green"),
+    "yellow": to_rgba("#ffe600"),
+    "red": to_rgba("tab:red"),
+}
 
 def agent_portrayal(agent):
-    size = 10
-    if agent.color == "green":
-        color = "tab:green"
-    elif agent.color == "yellow":
-        color = "tab:yellow"
-    else:
-        color = "tab:red"
-    return {"size": size, "color": color}
+    color = _COLOR_MAP.get(agent.color, to_rgba("tab:blue"))
+    return {"size": 10, "color": color}
 
 # @solara.component
 # def Histogram(model):
@@ -34,7 +34,7 @@ def agent_portrayal(agent):
 #     solara.FigureMatplotlib(fig)
 
 model_params = {
-    "n": {
+    "n_green": {
         "type": "SliderInt",
         "value": 50,
         "label": "Number of green robots :",
@@ -42,42 +42,42 @@ model_params = {
         "max": 100,
         "step": 1,
     },
-    # "n_yellow": {
-    #     "type": "SliderInt",
-    #     "value": 50,
-    #     "label": "Number of yellow robots :",
-    #     "min": 1,
-    #     "max": 100,
-    #     "step": 1,
-    # },
-    # "n_red": {
-    #     "type": "SliderInt",
-    #     "value": 50,
-    #     "label": "Number of red robots :",
-    #     "min": 1,
-    #     "max": 100,
-    #     "step": 1,
-    # },
+    "n_yellow": {
+        "type": "SliderInt",
+        "value": 50,
+        "label": "Number of yellow robots :",
+        "min": 1,
+        "max": 100,
+        "step": 1,
+    },
+    "n_red": {
+        "type": "SliderInt",
+        "value": 50,
+        "label": "Number of red robots :",
+        "min": 1,
+        "max": 100,
+        "step": 1,
+    },
     "width": {
         "type": "SliderInt",
         "value": 30,
         "label": "Width of the grid :",
-        "min": 10,
-        "max": 100,
-        "step": 5,
+        "min": 6,
+        "max": 99,
+        "step": 3,
     },
     "height": {
         "type": "SliderInt",
         "value": 10,
         "label": "Height of the grid :",
-        "min": 10,
-        "max": 100,
+        "min": 5,
+        "max": 50,
         "step": 5,
     },
 }
 
 # Create initial model instance
-model1 = RobotModel(1, 10, 30)
+model1 = RobotModel(n_green=1, n_yellow=1, n_red=1, height=10, width=30)
 
 SpaceGraph = make_space_component(agent_portrayal)
 
