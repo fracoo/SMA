@@ -4,3 +4,4 @@ seaborn
 matplotlib
 altair
 solara
+networkx
