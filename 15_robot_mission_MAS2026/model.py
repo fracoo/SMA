@@ -10,13 +10,13 @@ class RobotAgent(mesa.Agent):
         self.color = color
     
     def move(self):
-        possible_steps = self.model.grid.get_neighborhood(
+        possible_steps = self.model.grid.get_neighborhood( # type: ignore
             self.pos,
             moore=False, # False car seulement les 4 cases orthogonales sont accessibles
             include_center=False
         )
         new_position = self.random.choice(possible_steps)
-        self.model.grid.move_agent(self, new_position)
+        self.model.grid.move_agent(self, new_position) # type: ignore
 
     def step(self):
         """One step of the agent."""

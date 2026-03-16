@@ -89,5 +89,5 @@ page = SolaraViz(
     name="Radioactive Map",
 )
 # This is required to render the visualization in the Jupyter notebook
-page
+page # type: ignore
 # to start : "solara run server.py"
