@@ -1,6 +1,7 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
 import mesa
+from objects import Radioactivity
 
 class RobotAgent(mesa.Agent):
     "An Agent with fixed initial color"
@@ -48,7 +49,7 @@ class RobotModel(mesa.Model):
         self.n_red = n_red
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
-        #Create Agents
+        #Create Robot Agents
         agents = [RobotAgent(self, color="green") for _ in range(n_green)]
         agents += [RobotAgent(self, color="yellow") for _ in range(n_yellow)]
         agents += [RobotAgent(self, color="red") for _ in range(n_red)]
@@ -59,6 +60,18 @@ class RobotModel(mesa.Model):
         for a, i, j in zip(agents, x, y):
             # Add the agent to a random grid cell
             self.grid.place_agent(a, (i, j))
+
+        #Create Radioactivity Agents (width is always divisible by 3, so we can easily split the grid into 3 zones)
+        for i in range(self.grid.width): 
+            for j in range(self.grid.height): 
+                if i <= self.grid.width / 3: 
+                    zone = "z1"
+                elif i <= 2 * self.grid.width / 3: 
+                    zone = "z2"
+                else:
+                    zone = "z3"
+                radioactivity_agent = Radioactivity(self, zone)
+                self.grid.place_agent(radioactivity_agent, (i, j))
     
     def step(self):
         """Advance the model by one step."""
