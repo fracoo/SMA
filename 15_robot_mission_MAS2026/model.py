@@ -1,7 +1,8 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
 import mesa
-from objects import Radioactivity, WasteDisposalZone
+from objects import Radioactivity, WasteAgent, WasteDisposalZone
+import random
 
 class RobotAgent(mesa.Agent):
     "An Agent with fixed initial color"
@@ -76,6 +77,32 @@ class RobotModel(mesa.Model):
         #Create Waste Disposal Zone Agents (one for the whole grid)
         waste_disposal_zone_agent = WasteDisposalZone(self)
         self.grid.place_agent(waste_disposal_zone_agent, waste_disposal_zone_agent.position)
+
+        #Create wastes object
+        num_cases = self.grid.width * self.grid.height
+        num_wastes = random.randint(1, num_cases//10)
+        for i in range (num_wastes):
+            x = self.random.randrange(self.grid.width)
+            y = self.random.randrange(self.grid.height)
+            pos_waste = (x, y)
+            contenu_case = self.grid.get_cell_list_contents([pos_waste])
+            radioactivity_agent = None
+            for agent in contenu_case:
+                if isinstance(agent, Radioactivity):
+                    radioactivity_agent = agent
+                    break
+            if radioactivity_agent.radioactivity_level < 0.34:
+                waste_type = "green"
+            elif radioactivity_agent.radioactivity_level < 0.68:
+                waste_type = "yellow"
+            else :
+                waste_type = "red"
+            waste_obj = WasteAgent(self, waste_type)
+            self.grid.place_agent(waste_obj, pos_waste)
+
+            
+
+
     
     def step(self):
         """Advance the model by one step."""

@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
 from mesa.visualization import SolaraViz, make_space_component
 from model import RobotModel, RobotAgent
-from objects import WasteDisposalZone
+from objects import WasteDisposalZone, WasteAgent
 
 #from model import
 
@@ -22,6 +22,8 @@ def agent_portrayal(agent):
         return {"size": 10, "color": color}
     elif isinstance(agent, WasteDisposalZone):
         return {"size": 10, "color": to_rgba("tab:blue")}
+    elif isinstance(agent, WasteAgent):
+        return {"size": 10, "color": to_rgba("tab:gray")}
     else:
         return {"size": 0, "color": (0, 0, 0, 0)}
 
