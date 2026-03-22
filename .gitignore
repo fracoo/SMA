@@ -1,1 +1,3 @@
 *.pyc
+robot-sma
+__pycache__/**
