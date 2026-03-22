@@ -1,3 +1,5 @@
 *.pyc
 robot-sma
 __pycache__/**
+15_robot_mission_MAS2026/__pycache__/**
+15_robot_mission_MAS2026/__pycache__/
