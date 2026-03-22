@@ -4,6 +4,7 @@ import mesa
 import solara
 from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
+from matplotlib import patches
 from mesa.visualization import SolaraViz, make_space_component
 from model import RobotModel
 from agents import RobotAgent, GreenAgent, YellowAgent, RedAgent
@@ -28,6 +29,30 @@ def agent_portrayal(agent):
     else:
         return {"size": 0, "color": (0, 0, 0, 0)}
 
+def draw_zones(ax):
+    # This function draws uniform continuous background zones over the grid
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+    width = x_max - x_min
+    z = width / 3
+    
+    # Add colored rectangle patches with lower zorder so they sit behind agents
+    rect_green = patches.Rectangle((x_min, y_min), z, y_max - y_min, facecolor='green', alpha=0.2, zorder=0)
+    rect_yellow = patches.Rectangle((x_min + z, y_min), z, y_max - y_min, facecolor='yellow', alpha=0.2, zorder=0)
+    rect_red = patches.Rectangle((x_min + 2 * z, y_min), z, y_max - y_min, facecolor='red', alpha=0.2, zorder=0)
+    
+    ax.add_patch(rect_green)
+    ax.add_patch(rect_yellow)
+    ax.add_patch(rect_red)
+    
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    
+    ax.set_aspect('equal')
+    # ax.figure.set_size_inches(20, 20)
+    ax.set_title("Robot Waste Cleanup", fontsize=14, pad=10)
 
 # @solara.component
 # def Histogram(model):
@@ -88,7 +113,7 @@ model_params = {
 # Create initial model instance
 model1 = RobotModel(n_green=1, n_yellow=1, n_red=1, height=10, width=30)
 
-SpaceGraph = make_space_component(agent_portrayal)
+SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 
 #Create the Dashboard
 page = SolaraViz(
