@@ -30,4 +30,9 @@ class WasteAgent(mesa.Agent):
     def __init__(self, model, waste_type):
         super().__init__(model)
         self.waste_type = waste_type
+        position = (random.randint(0, model.grid.width-1), random.randint(0, model.grid.height-1))
+        # tant qu'il n'y a pas deja un déchet à cet emplacement, on en génère un nouveau
+        while WasteAgent in model.grid.get_cell_list_contents(position):
+            position = (random.randint(0, model.grid.width-1), random.randint(0, model.grid.height-1))
+        self.position = position
 

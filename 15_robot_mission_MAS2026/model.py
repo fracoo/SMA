@@ -24,23 +24,35 @@ class RobotModel(mesa.Model):
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
         #Create Robot Agents
-        agents = [GreenAgent(self) for _ in range(n_green)]
-        agents += [YellowAgent(self) for _ in range(n_yellow)]
-        agents += [RedAgent(self) for _ in range(n_red)]
 
-        # Create x and y positions for agents
-        x = self.rng.integers(0, self.grid.width, size=(n_green + n_yellow + n_red,))
-        y = self.rng.integers(0, self.grid.height, size=(n_green + n_yellow + n_red,))
-        for a, i, j in zip(agents, x, y):
-            # Add the agent to a random grid cell
-            self.grid.place_agent(a, (i, j))
+        #Green
+        green_agents = [GreenAgent(self) for _ in range(n_green)]
+        # Add the agent to a random (distinct on y) grid cell
+        y = self.rng.choice(self.grid.height, size=n_green, replace=False).tolist() # type: ignore
+        for a, j in zip(green_agents, y):
+            self.grid.place_agent(a, (0, j))
+    
+        #Yellow
+        yellow_agents = [YellowAgent(self) for _ in range(n_yellow)]
+        # Add the agent to a random (distinct on y) grid cell
+        y = self.rng.choice(self.grid.height, size=n_yellow, replace=False).tolist() # type: ignore
+        for a, j in zip(yellow_agents, y):
+            self.grid.place_agent(a, (self.grid.width//3, j))
+
+        #Red
+        red_agents = [RedAgent(self) for _ in range(n_red)]
+        # Add the agent to a random (distinct on y) grid cell
+        y = self.rng.choice(self.grid.height, size=n_red, replace=False).tolist() # type: ignore
+        for a, j in zip(red_agents, y):
+            self.grid.place_agent(a, (2*self.grid.width//3, j))
+
 
         #Create Radioactivity Agents (width is always divisible by 3, so we can easily split the grid into 3 zones)
         for i in range(self.grid.width): 
             for j in range(self.grid.height): 
-                if i <= self.grid.width / 3: 
+                if i <= self.grid.width // 3 - 1: 
                     zone = "z1"
-                elif i <= 2 * self.grid.width / 3: 
+                elif i <= 2 * self.grid.width // 3 - 1: 
                     zone = "z2"
                 else:
                     zone = "z3"
