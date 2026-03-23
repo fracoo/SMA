@@ -44,8 +44,9 @@ class RobotAgent(CommunicatingAgent):
                 and not (self.pos[1] == 0 and step[1] == self.model.grid.height - 1)  # type: ignore
                 and not (self.pos[1] == self.model.grid.height - 1 and step[1] == 0)  # type: ignore
             ):
-                allowed_steps.append(step)
-
+                cell = self.model.grid.get_cell_list_contents(step)  # type: ignore
+                if not any(isinstance(a, RobotAgent) for a in cell):
+                    allowed_steps.append(step)
         return allowed_steps
 
     def visualisation(self):
@@ -125,10 +126,10 @@ class GreenAgent(RobotAgent):
         for step in allowed_steps:
             cell_contents = self.model.grid.get_cell_list_contents(step)
             for agent in cell_contents:
-                if (isinstance(agent, Radioactivity) and agent.zone != "z1") or isinstance(agent, WasteAgent):
+                if isinstance(agent, Radioactivity) and agent.zone != "z1":
                     allowed_steps.remove(step)
                     break
-                
+
         new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
 
@@ -147,10 +148,10 @@ class YellowAgent(RobotAgent):
         for step in allowed_steps:
             cell_contents = self.model.grid.get_cell_list_contents(step)
             for agent in cell_contents:
-                if (isinstance(agent, Radioactivity) and agent.zone == "z3") or isinstance(agent, WasteAgent):
+                if isinstance(agent, Radioactivity) and agent.zone == "z3":
                     allowed_steps.remove(step)
                     break
-                
+
         new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
     
@@ -164,15 +165,8 @@ class RedAgent(RobotAgent):
     def __init__(self, model):
         super().__init__(model, color="red", slot1=None, slot2=None, map_knowledge={})
     
-    def move(self): 
+    def move(self):
         allowed_steps = self.allowed_steps()
-        for step in allowed_steps:
-            cell_contents = self.model.grid.get_cell_list_contents(step)
-            for agent in cell_contents:
-                if isinstance(agent, WasteAgent):
-                    allowed_steps.remove(step)
-                    break
-                
         new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
     
