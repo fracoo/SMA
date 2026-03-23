@@ -134,6 +134,7 @@ class GreenAgent(RobotAgent):
         self.model.grid.move_agent(self, new_position) # type: ignore
 
     def step(self):
+        self.visualisation()
         self.move()
 
 
@@ -156,6 +157,7 @@ class YellowAgent(RobotAgent):
         self.model.grid.move_agent(self, new_position) # type: ignore
     
     def step(self):
+        self.visualisation()
         self.move()
 
 
@@ -171,4 +173,5 @@ class RedAgent(RobotAgent):
         self.model.grid.move_agent(self, new_position) # type: ignore
     
     def step(self):
+        self.visualisation()
         self.move()
