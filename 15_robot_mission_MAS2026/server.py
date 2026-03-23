@@ -70,7 +70,7 @@ def draw_zones(ax):
 model_params = {
     "n_green": {
         "type": "SliderInt",
-        "value": 50,
+        "value": 2,
         "label": "Number of green robots :",
         "min": 1,
         "max": 100,
@@ -78,7 +78,7 @@ model_params = {
     },
     "n_yellow": {
         "type": "SliderInt",
-        "value": 50,
+        "value": 2,
         "label": "Number of yellow robots :",
         "min": 1,
         "max": 100,
@@ -86,7 +86,7 @@ model_params = {
     },
     "n_red": {
         "type": "SliderInt",
-        "value": 50,
+        "value": 2,
         "label": "Number of red robots :",
         "min": 1,
         "max": 100,
@@ -102,7 +102,7 @@ model_params = {
     },
     "height": {
         "type": "SliderInt",
-        "value": 10,
+        "value": 15,
         "label": "Height of the grid :",
         "min": 5,
         "max": 50,
