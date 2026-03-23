@@ -25,9 +25,14 @@ def agent_portrayal(agent):
         color = _COLOR_MAP.get(agent.color, to_rgba("tab:blue"))
         return {"size": 10, "color": color}
     elif isinstance(agent, WasteDisposalZone):
-        return {"size": 10, "color": to_rgba("tab:blue")}
-    # elif isinstance(agent, WasteAgent):
-    #     return {"size": 10, "color": to_rgba("tab:gray")}
+        return {"size": 10, "color": to_rgba("tab:blue"), "marker": "D"}
+    elif isinstance(agent, WasteAgent):
+        if agent.waste_type == "green":
+            return {"size": 5, "color": to_rgba("#229200"), "marker": "s"}
+        elif agent.waste_type == "yellow":
+            return {"size": 5, "color": to_rgba("#af6f01"), "marker": "s"}
+        elif agent.waste_type == "red":
+            return {"size": 5, "color": to_rgba("#9e0000"), "marker": "s"}
     else:
         return {"size": 0, "color": (0, 0, 0, 0)}
 
