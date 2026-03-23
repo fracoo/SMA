@@ -2,10 +2,12 @@
 
 import mesa
 import solara
+import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
 from matplotlib import patches
 from mesa.visualization import SolaraViz, make_space_component
+from mesa.visualization.utils import update_counter
 from model import RobotModel
 from agents import RobotAgent, GreenAgent, YellowAgent, RedAgent
 from objects import WasteDisposalZone, WasteAgent
@@ -113,12 +115,49 @@ model_params = {
 # Create initial model instance
 model1 = RobotModel(n_green=1, n_yellow=1, n_red=1, height=10, width=30)
 
+@solara.component
+def KnowledgeMap(model):
+    """Heatmap showing which cells are known by each robot color."""
+    update_counter.get()
+    m = model
+    width = m.grid.width
+    height = m.grid.height
+
+    # One grid per robot color
+    grids = {
+        "green":  np.zeros((height, width)),
+        "yellow": np.zeros((height, width)),
+        "red":    np.zeros((height, width)),
+    }
+    for agent in m.agents:
+        if isinstance(agent, RobotAgent) and agent.color in grids:
+            for (cx, cy) in agent.map_knowledge:
+                if 0 <= cx < width and 0 <= cy < height:
+                    grids[agent.color][cy][cx] = 1
+
+    fig = Figure(figsize=(12, 3))
+    axes = fig.subplots(1, 3)
+    colors_info = [
+        ("green",  "Greens",  "Green robots"),
+        ("yellow", "YlOrBr",  "Yellow robots"),
+        ("red",    "Reds",    "Red robots"),
+    ]
+    for ax, (color, cmap, title) in zip(axes, colors_info):
+        ax.imshow(grids[color], origin="lower", cmap=cmap, vmin=0, vmax=1, aspect="auto")
+        ax.set_title(title, fontsize=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    fig.suptitle("Connaissance de la carte par couleur de robot", fontsize=12)
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig)
+
+
 SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 
 #Create the Dashboard
 page = SolaraViz(
     model1,
-    components=[SpaceGraph],
+    components=[SpaceGraph, KnowledgeMap],
     model_params=model_params,
     name="Radioactive Map",
 )

@@ -4,13 +4,14 @@ import mesa
 import random
 from objects import Radioactivity, WasteDisposalZone, WasteAgent
 from agents import GreenAgent, YellowAgent, RedAgent
+from communication.message.MessageService import MessageService
 
 
 class RobotModel(mesa.Model):
     def __init__(self, n_green, n_yellow, n_red, height, width, seed=107):
         """
         Create a new RobotModel.
-        
+
         Args:
             n_green: Number of green agents in the simulation
             n_yellow: Number of yellow agents in the simulation
@@ -22,6 +23,10 @@ class RobotModel(mesa.Model):
         self.n_yellow = n_yellow
         self.n_red = n_red
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
+
+        # Reset and initialize the MessageService singleton before creating agents
+        MessageService._MessageService__instance = None
+        self.message_service = MessageService(self, instant_delivery=True)
 
         #Create Robot Agents
 
