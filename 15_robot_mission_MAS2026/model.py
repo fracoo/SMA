@@ -25,7 +25,7 @@ class RobotModel(mesa.Model):
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
         # Reset and initialize the MessageService singleton before creating agents
-        MessageService._MessageService__instance = None
+        MessageService._MessageService__instance = None # type: ignore
         self.message_service = MessageService(self, instant_delivery=True)
 
         #Create Robot Agents

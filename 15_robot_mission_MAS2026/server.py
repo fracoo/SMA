@@ -115,7 +115,7 @@ model_params = {
 # Create initial model instance
 model1 = RobotModel(n_green=1, n_yellow=1, n_red=1, height=15, width=30)
 
-@solara.component
+@solara.component # type: ignore
 def KnowledgeMap(model):
     """Heatmap showing which cells are known by each robot color."""
     update_counter.get()
@@ -157,7 +157,7 @@ SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 #Create the Dashboard
 page = SolaraViz(
     model1,
-    components=[SpaceGraph, KnowledgeMap],
+    components=[SpaceGraph, KnowledgeMap], # type: ignore
     model_params=model_params,
     name="Radioactive Map",
 )

@@ -51,7 +51,7 @@ class RobotAgent(CommunicatingAgent):
 
     def visualisation(self):
          # On regarde les cases accessibles pour voir si on des déchets y sont présents
-        x, y = self.pos
+        x, y = self.pos  # type: ignore
         width = self.model.grid.width
         height = self.model.grid.height
 
