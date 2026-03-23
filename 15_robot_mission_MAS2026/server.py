@@ -28,7 +28,7 @@ def agent_portrayal(agent):
         return {"size": 10, "color": to_rgba("tab:blue"), "marker": "D"}
     elif isinstance(agent, WasteAgent):
         if agent.waste_type == "green":
-            return {"size": 5, "color": to_rgba("#229200"), "marker": "s"}
+            return {"size": 5, "color": to_rgba("#1A6D01"), "marker": "s"}
         elif agent.waste_type == "yellow":
             return {"size": 5, "color": to_rgba("#af6f01"), "marker": "s"}
         elif agent.waste_type == "red":
@@ -118,7 +118,7 @@ model_params = {
 }
 
 # Create initial model instance
-model1 = RobotModel(n_green=1, n_yellow=1, n_red=1, height=15, width=30)
+model1 = RobotModel(n_green=3, n_yellow=3, n_red=3, height=15, width=30)
 
 @solara.component # type: ignore
 def KnowledgeMap(model):
