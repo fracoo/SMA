@@ -23,8 +23,8 @@ class RobotAgent(CommunicatingAgent):
 
         super().__init__(model, name=id)
         self.color = color
-        self.slot1 = slot1
-        self.slot2 = slot2
+        self.slot1 : WasteAgent | None = slot1
+        self.slot2 : WasteAgent | None = slot2
         self.map_knowledge = map_knowledge
         self.sent_to: dict[str, set] = {}  # neighbor_name -> set of cells already sent
 
@@ -113,6 +113,53 @@ class RobotAgent(CommunicatingAgent):
                 for cell, waste in sender_map_knowledge.items():
                     if cell not in view:  # Ne pas mettre à jour la connaissance pour les cellules que le robot peut voir
                         self.map_knowledge[cell] = waste
+    
+    def look_for_waste(self):
+        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        wastes = []
+        for agent in cell_contents:
+            if isinstance(agent, WasteAgent):
+                wastes.append(agent)
+        return wastes
+
+    def pick_waste(self):
+        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        for agent in cell_contents:
+            if isinstance(agent, WasteAgent):
+                if self.slot1 is None:
+                    self.slot1 = agent
+                    self.model.grid.remove_agent(agent) 
+                    break
+                elif self.slot2 is None:
+                    self.slot2 = agent
+                    self.model.grid.remove_agent(agent) 
+                    break
+                else:
+                    break
+         
+    
+    def combine_waste(self):
+        if self.slot1 and self.slot2:
+            if self.slot1.waste_type == self.slot2.waste_type:
+                if self.slot1.waste_type == "green":
+                    self.slot1 = WasteAgent(self.model, "yellow")
+                elif self.slot1.waste_type == "yellow":
+                    self.slot1 = WasteAgent(self.model, "red")
+                elif self.slot1.waste_type == "red":
+                    pass
+            self.slot2 = None
+
+    def put_waste(self):
+        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        has_waste_disposal_zone = any(isinstance(agent, WasteDisposalZone) for agent in cell_contents)
+        if has_waste_disposal_zone:
+            if self.slot1 and self.slot1.waste_type == "red":
+                self.slot1 = None
+        else:
+            if self.slot1:
+                self.model.grid.place_agent(self.slot1, self.pos)
+                self.slot1 = None
+
 
 
 class GreenAgent(RobotAgent):
@@ -122,6 +169,12 @@ class GreenAgent(RobotAgent):
         super().__init__(model, color="green", slot1=None, slot2=None, map_knowledge={})
     
     def move(self):
+        """
+        Logique :
+        1. Trouver les cases légales
+        2. Se déplacer
+        En fonction de l'état des slots, le déplacement n'est pas le même.
+        """
         allowed_steps = self.allowed_steps()
         for step in allowed_steps:
             cell_contents = self.model.grid.get_cell_list_contents(step)
@@ -129,13 +182,56 @@ class GreenAgent(RobotAgent):
                 if isinstance(agent, Radioactivity) and agent.zone != "z1":
                     allowed_steps.remove(step)
                     break
-
-        new_position = self.random.choice(allowed_steps)
+        
+        if self.slot1 and self.slot1.waste_type =="yellow":
+            # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est) pour les déposer
+            east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
+            radioactivity_east_cell : str | None = None
+            cell_contents = self.model.grid.get_cell_list_contents(east_cell)
+            for agent in cell_contents:
+                if isinstance(agent, Radioactivity):
+                    radioactivity_east_cell = agent.zone
+                    break
+            if radioactivity_east_cell and radioactivity_east_cell == "z1":
+                new_position = east_cell
+            else:
+                self.put_waste()
+                new_position = self.pos
+        else:
+            new_position = self.random.choice(allowed_steps)
+        
         self.model.grid.move_agent(self, new_position) # type: ignore
 
     def step(self):
+        """
+        Logique du tour :
+        1. Visualisation de la carte pour mettre à jour les connaissances
+        2.a. Si possible, Combinaison de deux déchets du même type pour en obtenir un de niveau supérieur
+        2.b. Si possible, Ramassage d'un déchet s'il y en a un sur la case
+        2.c. Sinon, déplacement vers une case accessible
+        """
         self.visualisation()
-        self.move()
+        
+        # Action
+        if self.slot1 and self.slot2:
+            if self.slot1.waste_type == self.slot2.waste_type:
+                self.combine_waste()
+            else:
+                self.move()
+        else:
+            wastes_in_cell = self.look_for_waste()
+            if wastes_in_cell != []:
+                action = False
+                for waste in wastes_in_cell:
+                    if waste.waste_type == "green":
+                        self.pick_waste()
+                        action = True
+                        break
+                if not action:
+                    self.move()
+            else:
+                self.move()
+        
 
 
 class YellowAgent(RobotAgent):
