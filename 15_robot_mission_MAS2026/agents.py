@@ -122,6 +122,14 @@ class RobotAgent(CommunicatingAgent):
                 wastes.append(agent)
         return wastes
 
+    def look_for_others(self):
+        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        others = []
+        for agent in cell_contents:
+            if isinstance(agent, RobotAgent) and agent != self and agent.color == self.color:
+                others.append(agent)
+        return others
+
     def pick_waste(self):
         cell_contents = self.model.grid.get_cell_list_contents(self.pos)
         for agent in cell_contents:
@@ -137,7 +145,6 @@ class RobotAgent(CommunicatingAgent):
                 else:
                     break
          
-    
     def combine_waste(self):
         if self.slot1 and self.slot2:
             if self.slot1.waste_type == self.slot2.waste_type:
@@ -160,6 +167,18 @@ class RobotAgent(CommunicatingAgent):
                 self.model.grid.place_agent(self.slot1, self.pos)
                 self.slot1 = None
 
+    def receive_waste_from_other(self, other: "RobotAgent"):
+        """This function assume that self and other have exaclty one waste in their slots, and that the waste are of the same type."""
+        self_empty_slot = "slot2" if self.slot1 else "slot1"
+        other_empty_slot = "slot2" if other.slot1 else "slot1"
+        self_waste_slot = "slot1" if self.slot1 else "slot2"
+        other_waste_slot = "slot1" if other.slot1 else "slot2"
+
+        #swap the waste between the two robots
+        setattr(self, self_empty_slot, getattr(other, other_waste_slot))
+        setattr(other, other_empty_slot, getattr(self, self_waste_slot))
+        setattr(self, self_waste_slot, None)
+        setattr(other, other_waste_slot, None)
 
 
 class GreenAgent(RobotAgent):
@@ -214,22 +233,36 @@ class GreenAgent(RobotAgent):
         
         # Action
         if self.slot1 and self.slot2:
+            # si deux dechets, on combine
             if self.slot1.waste_type == self.slot2.waste_type:
                 self.combine_waste()
             else:
                 self.move()
         else:
+            action = False
+            # si un déchet, on regarde si un autre robot de la même couleur a un déchet aussi pour faire l'échange
+            if self.slot1 or self.slot2: #on sait déjà qu'il n'y a pas deux déchets.
+                others = self.look_for_others()
+                if others:
+                    for other in others:
+                        if (other.slot1) ^ (other.slot2):  # Si l'autre robot a exactement un slot occupé
+                            self.receive_waste_from_other(other)
+                            action = True
+                            break
+
             wastes_in_cell = self.look_for_waste()
-            if wastes_in_cell != []:
-                action = False
+            if wastes_in_cell != [] and not action:
+                # si on n'a pas fait d'échange, on ramasse un déchet si il y en a
                 for waste in wastes_in_cell:
                     if waste.waste_type == "green":
                         self.pick_waste()
                         action = True
                         break
                 if not action:
+                    # si tous les déchets sont de niveau supérieur, on se déplace
                     self.move()
             else:
+                # sinon, on se déplace
                 self.move()
         
 
