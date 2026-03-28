@@ -180,6 +180,40 @@ class RobotAgent(CommunicatingAgent):
         setattr(self, self_waste_slot, None)
         setattr(other, other_waste_slot, None)
 
+    def move(self):
+        raise NotImplementedError
+
+    def step(self):
+        self.visualisation()
+
+        if self.slot1 and self.slot2:
+            if self.slot1.waste_type == self.slot2.waste_type:
+                self.combine_waste()
+            else:
+                self.move()
+        else:
+            action = False
+            if self.slot1 or self.slot2:
+                others = self.look_for_others()
+                if others:
+                    for other in others:
+                        if (other.slot1) ^ (other.slot2):
+                            self.receive_waste_from_other(other)
+                            action = True
+                            break
+
+            wastes_in_cell = self.look_for_waste()
+            if wastes_in_cell != [] and not action:
+                for waste in wastes_in_cell:
+                    if waste.waste_type == self.color:
+                        self.pick_waste()
+                        action = True
+                        break
+                if not action:
+                    self.move()
+            else:
+                self.move()
+
 
 class GreenAgent(RobotAgent):
     """Robot de la zone verte (z1). Collecte les déchets verts."""
@@ -221,50 +255,6 @@ class GreenAgent(RobotAgent):
         
         self.model.grid.move_agent(self, new_position) # type: ignore
 
-    def step(self):
-        """
-        Logique du tour :
-        1. Visualisation de la carte pour mettre à jour les connaissances
-        2.a. Si possible, Combinaison de deux déchets du même type pour en obtenir un de niveau supérieur
-        2.b. Si possible, Ramassage d'un déchet s'il y en a un sur la case
-        2.c. Sinon, déplacement vers une case accessible
-        """
-        self.visualisation()
-        
-        # Action
-        if self.slot1 and self.slot2:
-            # si deux dechets, on combine
-            if self.slot1.waste_type == self.slot2.waste_type:
-                self.combine_waste()
-            else:
-                self.move()
-        else:
-            action = False
-            # si un déchet, on regarde si un autre robot de la même couleur a un déchet aussi pour faire l'échange
-            if self.slot1 or self.slot2: #on sait déjà qu'il n'y a pas deux déchets.
-                others = self.look_for_others()
-                if others:
-                    for other in others:
-                        if (other.slot1) ^ (other.slot2):  # Si l'autre robot a exactement un slot occupé
-                            self.receive_waste_from_other(other)
-                            action = True
-                            break
-
-            wastes_in_cell = self.look_for_waste()
-            if wastes_in_cell != [] and not action:
-                # si on n'a pas fait d'échange, on ramasse un déchet si il y en a
-                for waste in wastes_in_cell:
-                    if waste.waste_type == "green":
-                        self.pick_waste()
-                        action = True
-                        break
-                if not action:
-                    # si tous les déchets sont de niveau supérieur, on se déplace
-                    self.move()
-            else:
-                # sinon, on se déplace
-                self.move()
-        
 
 
 class YellowAgent(RobotAgent):
@@ -284,10 +274,6 @@ class YellowAgent(RobotAgent):
 
         new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
-    
-    def step(self):
-        self.visualisation()
-        self.move()
 
 
 class RedAgent(RobotAgent):
@@ -295,12 +281,8 @@ class RedAgent(RobotAgent):
 
     def __init__(self, model):
         super().__init__(model, color="red", slot1=None, slot2=None, map_knowledge={})
-    
+
     def move(self):
         allowed_steps = self.allowed_steps()
         new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
-    
-    def step(self):
-        self.visualisation()
-        self.move()
