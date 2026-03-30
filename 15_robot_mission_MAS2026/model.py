@@ -83,7 +83,7 @@ class RobotModel(mesa.Model):
                     break
             if radioactivity_agent and radioactivity_agent.radioactivity_level < 0.34:
                 waste_type = "green"
-            elif radioactivity_agent and radioactivity_agent.radioactivity_level < 0.68:
+            elif radioactivity_agent and radioactivity_agent.radioactivity_level < 0.67:
                 waste_type = "yellow"
             elif radioactivity_agent:
                 waste_type = "red"
