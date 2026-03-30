@@ -180,14 +180,38 @@ class RobotAgent(CommunicatingAgent):
         setattr(self, self_waste_slot, None)
         setattr(other, other_waste_slot, None)
 
+    def discard_waste(self):
+        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        has_waste_disposal_zone = any(isinstance(agent, WasteDisposalZone) for agent in cell_contents)
+        if has_waste_disposal_zone:
+            if self.slot1:
+                self.slot1 = None
+            elif self.slot2:
+                self.slot2 = None
+
     def move(self):
         raise NotImplementedError
 
     def step(self):
+        """
+        Logique :
+        1. Visualisation (mise à jour de la connaissance de la carte)
+        2.a. Si sur un slot de dépôt et possession d'un déchet, déposer le déchet.
+        2.b. Sinon, si les deux slots sont pleins et contiennent des déchets du même type (hors rouge), les combiner
+        2.c. Sinon, si un des deux slots est plein, et qu'il y a un robot voisin de la même couleur, essayer de donner le déchet
+        2.d. Sinon, si il y a un déchet du même type dans la case, le ramasser
+        2.e. Sinon, se déplacer
+        """
         self.visualisation()
 
-        if self.slot1 and self.slot2:
-            if self.slot1.waste_type == self.slot2.waste_type:
+        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        has_waste_disposal_zone = any(isinstance(agent, WasteDisposalZone) for agent in cell_contents)
+
+        if has_waste_disposal_zone and (self.slot1 or self.slot2):
+            self.discard_waste()
+
+        elif self.slot1 and self.slot2:
+            if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type != "red":
                 self.combine_waste()
             else:
                 self.move()
@@ -197,7 +221,7 @@ class RobotAgent(CommunicatingAgent):
                 others = self.look_for_others()
                 if others:
                     for other in others:
-                        if (other.slot1) ^ (other.slot2):
+                        if bool(other.slot1) ^ bool(other.slot2):
                             self.receive_waste_from_other(other)
                             action = True
                             break
@@ -228,6 +252,7 @@ class GreenAgent(RobotAgent):
         2. Se déplacer
         En fonction de l'état des slots, le déplacement n'est pas le même.
         """
+        #trouver les cases légales
         allowed_steps = self.allowed_steps()
         for step in allowed_steps:
             cell_contents = self.model.grid.get_cell_list_contents(step)
@@ -235,7 +260,9 @@ class GreenAgent(RobotAgent):
                 if isinstance(agent, Radioactivity) and agent.zone != "z1":
                     allowed_steps.remove(step)
                     break
+        allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
         
+        # deplacement
         if self.slot1 and self.slot1.waste_type =="yellow":
             # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est) pour les déposer
             east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
@@ -264,15 +291,47 @@ class YellowAgent(RobotAgent):
         super().__init__(model, color="yellow", slot1=None, slot2=None, map_knowledge={})
     
     def move(self):
+        """
+        Logique :
+        1. Trouver les cases légales
+        2. Se déplacer
+        En fonction de l'état des slots, le déplacement n'est pas le même.
+        """
+        #trouver les cases légales
         allowed_steps = self.allowed_steps()
         for step in allowed_steps:
             cell_contents = self.model.grid.get_cell_list_contents(step)
             for agent in cell_contents:
-                if isinstance(agent, Radioactivity) and agent.zone == "z3":
-                    allowed_steps.remove(step)
+                if isinstance(agent, Radioactivity):
+                    if agent.zone == "z3":
+                        allowed_steps.remove(step)
+                        break
+                    elif agent.zone == "z1":
+                        #remove only if there is no yellow waste in the cell
+                        has_yellow_waste = any(isinstance(a, WasteAgent) and a.waste_type == "yellow" for a in cell_contents)
+                        if not has_yellow_waste:
+                            allowed_steps.remove(step)
+                            break
+        allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
+        
+        #deplacement
+        if self.slot1 and self.slot1.waste_type =="red":
+            # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est) pour les déposer
+            east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
+            radioactivity_east_cell : str | None = None
+            cell_contents = self.model.grid.get_cell_list_contents(east_cell)
+            for agent in cell_contents:
+                if isinstance(agent, Radioactivity):
+                    radioactivity_east_cell = agent.zone
                     break
+            if radioactivity_east_cell and radioactivity_east_cell in ["z1", "z2"]:
+                new_position = east_cell
+            else:
+                self.put_waste()
+                new_position = self.pos
+        else:
+            new_position = self.random.choice(allowed_steps)
 
-        new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
 
 
@@ -283,6 +342,40 @@ class RedAgent(RobotAgent):
         super().__init__(model, color="red", slot1=None, slot2=None, map_knowledge={})
 
     def move(self):
+        """
+        Logique :
+        1. Trouver les cases légales
+        2. Se déplacer
+        En fonction de l'état des slots, le déplacement n'est pas le même.
+        """
+        #trouver les cases légales
         allowed_steps = self.allowed_steps()
-        new_position = self.random.choice(allowed_steps)
+        for step in allowed_steps:
+            cell_contents = self.model.grid.get_cell_list_contents(step)
+            for agent in cell_contents:
+                if isinstance(agent, Radioactivity) and agent.zone != "z3":
+                    # remove only if there is no red waste in the cell
+                    has_red_waste = any(isinstance(a, WasteAgent) and a.waste_type == "red" for a in cell_contents)
+                    if not has_red_waste:
+                        allowed_steps.remove(step)
+                        break
+        allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
+
+        #deplacement
+        if (self.slot1 and self.slot1.waste_type =="red") or (self.slot2 and self.slot2.waste_type =="red"):
+            # Si possession d'un déchet rouge, on se dirige vers la zone de disposal (sud est) pour les déposer
+            east_x_coord = self.pos[0] + 1 # type: ignore
+            if east_x_coord >= self.model.grid.width: # type: ignore
+                south_y_coord = self.pos[1] - 1 # type: ignore
+                if south_y_coord >= self.model.grid.height: # type: ignore
+                    #le robot est sur la waste disposal zone, il ne doit pas bouger. Il n'est pas censé entrer dans la boucle de déplacement si les règles sont respectées, mais on ajoute ce cas par sécurité
+                    new_position = self.pos
+                else:
+                    new_position = (self.pos[0], south_y_coord) # type: ignore
+            else:
+                new_position = (east_x_coord, self.pos[1]) # type: ignore
+
+
+        else:
+            new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
