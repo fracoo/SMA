@@ -32,6 +32,13 @@ from model import RobotModel
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
 VERSION = "v0_1"
+"""
+v0_1: 
+    Initial version with random movement robots. 
+    Robots can't exchange waste as they can only do it with robots on the same cell which is prevented.
+    Once green or yellow robots have collected two waste units (green and yellow), they combined them and drop it at the edge of the zone.
+    Once red robots have collected one red waste unit, they discard it at the waste disposal zone.
+"""
 
 # Each entry: (label, params dict)
 # n_waste = number of red waste units; total waste = 7 * n_waste (4 green + 2 yellow + 1 red)
