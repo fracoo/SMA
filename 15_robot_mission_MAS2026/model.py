@@ -24,6 +24,10 @@ class RobotModel(mesa.Model):
         self.n_yellow = n_yellow
         self.n_red = n_red
         self.n_waste = n_waste
+        # n_waste is the number of red waste units; proportions are 4:2:1 (green:yellow:red)
+        # so that combining always fully resolves: 4 green → 2 yellow → 1 red → disposed
+        self.total_initial_waste = 7 * n_waste
+        self.waste_disposed = 0
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
         # Reset and initialize the MessageService singleton before creating agents
@@ -70,27 +74,38 @@ class RobotModel(mesa.Model):
         waste_disposal_zone_agent = WasteDisposalZone(self)
         self.grid.place_agent(waste_disposal_zone_agent, waste_disposal_zone_agent.position)
 
-        #Create wastes object
-        num_cases = self.grid.width * self.grid.height
-        num_wastes = n_waste
-        for i in range (num_wastes):
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
-            pos_waste = (x, y)
-            contenu_case = self.grid.get_cell_list_contents([pos_waste])
-            radioactivity_agent: Radioactivity | None = None
-            for agent in contenu_case:
-                if isinstance(agent, Radioactivity):
-                    radioactivity_agent = agent
-                    break
-            if radioactivity_agent and radioactivity_agent.radioactivity_level < 0.34:
-                waste_type = "green"
-            elif radioactivity_agent and radioactivity_agent.radioactivity_level < 0.67:
-                waste_type = "yellow"
-            elif radioactivity_agent:
-                waste_type = "red"
-            waste_obj = WasteAgent(self, waste_type)
-            self.grid.place_agent(waste_obj, pos_waste)
+        self.datacollector = mesa.DataCollector(
+            model_reporters={
+                "fraction_disposed": lambda m: m.waste_disposed / m.total_initial_waste if m.total_initial_waste > 0 else 0,
+                "waste_disposed": lambda m: m.waste_disposed,
+                "waste_on_grid": lambda m: sum(1 for a in m.agents if isinstance(a, WasteAgent) and a.pos is not None),
+                "waste_held": lambda m: sum(
+                    (a.slot1.original_count if a.slot1 else 0) + (a.slot2.original_count if a.slot2 else 0)
+                    for a in m.agents if hasattr(a, "slot1")
+                ),
+            }
+        )
+
+        # Create waste objects: 4*n_waste green (z1), 2*n_waste yellow (z2), n_waste red (z3)
+        # Proportions 4:2:1 guarantee full cleanup: 4 green → 2 yellow → 1 red → disposed
+        z1_x = range(0, self.grid.width // 3)
+        z2_x = range(self.grid.width // 3, 2 * self.grid.width // 3)
+        z3_x = range(2 * self.grid.width // 3, self.grid.width)
+
+        for waste_type, zone_x, count in [
+            ("green",  z1_x, 4 * n_waste),
+            ("yellow", z2_x, 2 * n_waste),
+            ("red",    z3_x, 1 * n_waste),
+        ]:
+            placed = 0
+            while placed < count:
+                x = self.random.choice(list(zone_x))
+                y = self.random.randrange(self.grid.height)
+                pos_waste = (x, y)
+                if not any(isinstance(a, WasteAgent) for a in self.grid.get_cell_list_contents([pos_waste])):
+                    waste_obj = WasteAgent(self, waste_type)
+                    self.grid.place_agent(waste_obj, pos_waste)
+                    placed += 1
 
             
 
@@ -99,6 +114,7 @@ class RobotModel(mesa.Model):
     def step(self):
         """Advance the model by one step."""
         self.agents.shuffle_do("step")
+        self.datacollector.collect(self)
 
 
 

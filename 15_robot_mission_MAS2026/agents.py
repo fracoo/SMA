@@ -148,10 +148,11 @@ class RobotAgent(CommunicatingAgent):
     def combine_waste(self):
         if self.slot1 and self.slot2:
             if self.slot1.waste_type == self.slot2.waste_type:
+                combined_count = self.slot1.original_count + self.slot2.original_count
                 if self.slot1.waste_type == "green":
-                    self.slot1 = WasteAgent(self.model, "yellow")
+                    self.slot1 = WasteAgent(self.model, "yellow", original_count=combined_count)
                 elif self.slot1.waste_type == "yellow":
-                    self.slot1 = WasteAgent(self.model, "red")
+                    self.slot1 = WasteAgent(self.model, "red", original_count=combined_count)
                 elif self.slot1.waste_type == "red":
                     pass
             self.slot2 = None
@@ -185,8 +186,10 @@ class RobotAgent(CommunicatingAgent):
         has_waste_disposal_zone = any(isinstance(agent, WasteDisposalZone) for agent in cell_contents)
         if has_waste_disposal_zone:
             if self.slot1:
+                self.model.waste_disposed += self.slot1.original_count
                 self.slot1 = None
             elif self.slot2:
+                self.model.waste_disposed += self.slot2.original_count
                 self.slot2 = None
 
     def move(self):
@@ -196,13 +199,14 @@ class RobotAgent(CommunicatingAgent):
         """
         Logique :
         1. Visualisation (mise à jour de la connaissance de la carte)
+            La visualisation n'est pas utile pour la v0 des robots qui ont un déplacement aléatoire.
         2.a. Si sur un slot de dépôt et possession d'un déchet, déposer le déchet.
         2.b. Sinon, si les deux slots sont pleins et contiennent des déchets du même type (hors rouge), les combiner
         2.c. Sinon, si un des deux slots est plein, et qu'il y a un robot voisin de la même couleur, essayer de donner le déchet
         2.d. Sinon, si il y a un déchet du même type dans la case, le ramasser
         2.e. Sinon, se déplacer
         """
-        self.visualisation()
+        # self.visualisation()
 
         cell_contents = self.model.grid.get_cell_list_contents(self.pos)
         has_waste_disposal_zone = any(isinstance(agent, WasteDisposalZone) for agent in cell_contents)
