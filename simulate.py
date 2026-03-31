@@ -1,3 +1,4 @@
+#Groupe 15, François PETIT, Corentin RAFFRAY, 31 mars 2026
 #!/usr/bin/env python3
 """
 Batch simulation runner for RobotModel.
