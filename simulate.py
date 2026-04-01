@@ -33,11 +33,10 @@ MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
 VERSION = "v0_2"
 """
-v0_1: 
-    Initial version with random movement robots. 
-    Robots can't exchange waste as they can only do it with robots on the same cell which is prevented.
-    Once green or yellow robots have collected two waste units (green and yellow), they combined them and drop it at the edge of the zone.
-    Once red robots have collected one red waste unit, they discard it at the waste disposal zone.
+v0_2: 
+    Updated version with improved waste transfer logic. Adjacent robots of same types can
+    now exchange their waste, which avoid the case where every robot is stuck with
+    one waste in its slots whereas there are no more waste to pick up.
 """
 
 # Each entry: (label, params dict)
