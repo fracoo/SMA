@@ -25,11 +25,13 @@ class WasteDisposalZone(mesa.Agent):
         height = model.grid.height
         self.position = (model.grid.width-1, 0)
 
+WASTE_UNITS = {"green": 1, "yellow": 2, "red": 4}
+
 class WasteAgent(mesa.Agent):
-    def __init__(self, model, waste_type, original_count=1):
+    def __init__(self, model, waste_type, original_count=None):
         super().__init__(model)
         self.waste_type = waste_type
-        self.original_count = original_count  # tracks how many initial waste units this object represents
+        self.original_count = original_count if original_count is not None else WASTE_UNITS[waste_type]
         position = (random.randint(0, model.grid.width-1), random.randint(0, model.grid.height-1))
         # tant qu'il n'y a pas deja un déchet à cet emplacement, on en génère un nouveau
         while WasteAgent in model.grid.get_cell_list_contents(position):

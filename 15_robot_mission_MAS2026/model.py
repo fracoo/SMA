@@ -25,8 +25,9 @@ class RobotModel(mesa.Model):
         self.n_red = n_red
         self.n_waste = n_waste
         # n_waste is the number of red waste units; proportions are 4:2:1 (green:yellow:red)
-        # so that combining always fully resolves: 4 green → 2 yellow → 1 red → disposed
-        self.total_initial_waste = 7 * n_waste
+        # weighted units: green=1, yellow=2, red=4
+        # total = 4*n_waste*1 + 2*n_waste*2 + 1*n_waste*4 = 12*n_waste
+        self.total_initial_waste = 12 * n_waste
         self.waste_disposed = 0
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
@@ -87,7 +88,7 @@ class RobotModel(mesa.Model):
         )
 
         # Create waste objects: 4*n_waste green (z1), 2*n_waste yellow (z2), n_waste red (z3)
-        # Proportions 4:2:1 guarantee full cleanup: 4 green → 2 yellow → 1 red → disposed
+        # Proportions 4:2:1 guarantee full cleanup: 4 green -> 2 yellow -> 1 red -> disposed
         z1_x = range(0, self.grid.width // 3)
         z2_x = range(self.grid.width // 3, 2 * self.grid.width // 3)
         z3_x = range(2 * self.grid.width // 3, self.grid.width)
