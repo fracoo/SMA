@@ -1,5 +1,7 @@
 #Groupe 15, François PETIT, Corentin RAFFRAY, 16 mars 2026
 
+from operator import ne
+
 import mesa
 import numpy as np
 from objects import Radioactivity, WasteDisposalZone, WasteAgent
@@ -123,11 +125,17 @@ class RobotAgent(CommunicatingAgent):
         return wastes
 
     def look_for_others(self):
-        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
+        near_view = self.model.grid.get_neighborhood(
+            self.pos,
+            moore = False,
+            include_center=False
+        )
         others = []
-        for agent in cell_contents:
-            if isinstance(agent, RobotAgent) and agent != self and agent.color == self.color:
-                others.append(agent)
+        for cell in near_view :
+            cell_content = self.model.grid.get_cell_list_contents(cell)
+            for agent in cell_content:
+                if isinstance(agent,RobotAgent) and agent.color == self.color:
+                    others.append(agent)
         return others
 
     def pick_waste(self, waste: "WasteAgent"):
@@ -164,14 +172,10 @@ class RobotAgent(CommunicatingAgent):
     def receive_waste_from_other(self, other: "RobotAgent"):
         """This function assume that self and other have exaclty one waste in their slots, and that the waste are of the same type."""
         self_empty_slot = "slot2" if self.slot1 else "slot1"
-        other_empty_slot = "slot2" if other.slot1 else "slot1"
-        self_waste_slot = "slot1" if self.slot1 else "slot2"
         other_waste_slot = "slot1" if other.slot1 else "slot2"
 
-        #swap the waste between the two robots
+        #swap the waste between the two robots, situation 1/1 à 2/0
         setattr(self, self_empty_slot, getattr(other, other_waste_slot))
-        setattr(other, other_empty_slot, getattr(self, self_waste_slot))
-        setattr(self, self_waste_slot, None)
         setattr(other, other_waste_slot, None)
 
     def discard_waste(self):

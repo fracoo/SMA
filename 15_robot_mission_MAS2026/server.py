@@ -164,16 +164,99 @@ def KnowledgeMap(model):
     fig.tight_layout()
     solara.FigureMatplotlib(fig)
 
+@solara.component  # type: ignore
+def RobotSlotsView(model):
+    update_counter.get()
+    m = model
+    width = m.grid.width
+    height = m.grid.height
+
+    fig = Figure(figsize=(12, 6))
+    ax = fig.subplots()
+
+    ax.set_xlim(-0.5, width - 0.5)
+    ax.set_ylim(-0.5, height - 0.5)
+    ax.set_aspect("equal")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title("Robots et slots", fontsize=14, pad=10)
+
+    draw_zones(ax)
+
+    for a in m.agents:
+        if isinstance(a, WasteDisposalZone) and a.pos is not None:
+            x, y = a.pos
+            zone = patches.RegularPolygon(
+                (x, y), numVertices=4, radius=0.28,
+                orientation=np.pi / 4,
+                facecolor=to_rgba("tab:blue"),
+                edgecolor="black",
+                linewidth=1.0,
+                zorder=2
+            )
+            ax.add_patch(zone)
+
+        elif isinstance(a, WasteAgent) and a.pos is not None:
+            x, y = a.pos
+            if a.waste_type == "green":
+                c = to_rgba("#1A6D01")
+            elif a.waste_type == "yellow":
+                c = to_rgba("#af6f01")
+            else:
+                c = to_rgba("#9e0000")
+            waste = patches.Rectangle(
+                (x - 0.12, y - 0.12), 0.24, 0.24,
+                facecolor=c, edgecolor="black",
+                linewidth=0.8, zorder=2
+            )
+            ax.add_patch(waste)
+
+    # Robots: grand rond + 2 petits ronds (slots)
+    for a in m.agents:
+        if isinstance(a, RobotAgent) and a.pos is not None:
+            x, y = a.pos
+            body_color = _COLOR_MAP.get(a.color, to_rgba("tab:blue"))
+
+            body = patches.Circle(
+                (x, y), radius=0.32,
+                facecolor=body_color, edgecolor="black",
+                linewidth=1.2, zorder=3
+            )
+            ax.add_patch(body)
+
+            slot1_color = "white" if a.slot1 is not None else "black"
+            slot2_color = "white" if a.slot2 is not None else "black"
+
+            slot_left = patches.Circle(
+                (x - 0.16, y - 0.27), radius=0.09,
+                facecolor=slot1_color, edgecolor="black",
+                linewidth=1.0, zorder=4
+            )
+            slot_right = patches.Circle(
+                (x + 0.16, y - 0.27), radius=0.09,
+                facecolor=slot2_color, edgecolor="black",
+                linewidth=1.0, zorder=4
+            )
+            ax.add_patch(slot_left)
+            ax.add_patch(slot_right)
+
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig)
+
 
 SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 
 #Create the Dashboard
 page = SolaraViz(
     model1,
-    components=[SpaceGraph, KnowledgeMap], # type: ignore
+    components=[RobotSlotsView, KnowledgeMap],  # type: ignore
     model_params=model_params,
     name="Radioactive Map",
 )
 # This is required to render the visualization in the Jupyter notebook
 page # type: ignore
 # to start : "solara run server.py"
+
+
+
+
