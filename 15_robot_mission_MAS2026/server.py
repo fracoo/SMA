@@ -99,7 +99,7 @@ model_params = {
         "max": 10,
         "step": 1,
     },
-        "n_waste": {
+    "n_waste": {
         "type": "SliderInt",
         "value": 30,
         "label": "Number of waste objects :",

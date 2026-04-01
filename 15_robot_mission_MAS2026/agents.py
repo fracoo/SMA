@@ -116,13 +116,28 @@ class RobotAgent(CommunicatingAgent):
                     if cell not in view:  # Ne pas mettre à jour la connaissance pour les cellules que le robot peut voir
                         self.map_knowledge[cell] = waste
     
-    def look_for_waste(self):
+    def look_for_waste_in_current_cell(self):
         cell_contents = self.model.grid.get_cell_list_contents(self.pos)
         wastes = []
         for agent in cell_contents:
             if isinstance(agent, WasteAgent):
                 wastes.append(agent)
         return wastes
+    
+    def look_for_waste_around(self):
+        near_cells = self.model.grid.get_neighborhood(
+            self.pos,
+            moore=False,
+            include_center=False,
+        )
+        wastes = []
+        for cell in near_cells:
+            cell_contents = self.model.grid.get_cell_list_contents(cell)
+            for agent in cell_contents:
+                if isinstance(agent, WasteAgent):
+                    wastes.append(agent)
+        return wastes
+
 
     def look_for_others(self):
         near_view = self.model.grid.get_neighborhood(
@@ -234,7 +249,7 @@ class RobotAgent(CommunicatingAgent):
                             action = True
                             break
 
-            wastes_in_cell = self.look_for_waste()
+            wastes_in_cell = self.look_for_waste_in_current_cell()
             if wastes_in_cell != [] and not action:
                 for waste in wastes_in_cell:
                     if waste.waste_type == self.color:
@@ -257,7 +272,7 @@ class GreenAgent(RobotAgent):
         """
         Logique :
         1. Trouver les cases légales
-        2. Se déplacer
+        2. Se déplacer en fonction de la vision alentour du robot
         En fonction de l'état des slots, le déplacement n'est pas le même.
         """
         #trouver les cases légales
@@ -270,6 +285,8 @@ class GreenAgent(RobotAgent):
                     break
         allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
         
+        wastes_around = self.look_for_waste_around()
+
         # deplacement
         if self.slot1 and self.slot1.waste_type =="yellow":
             # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est) pour les déposer
@@ -285,6 +302,16 @@ class GreenAgent(RobotAgent):
             else:
                 self.put_waste()
                 new_position = self.pos
+
+        elif wastes_around :
+            new_position = None
+            for waste in wastes_around:
+                if waste.waste_type =="green" and waste.pos in allowed_steps:
+                    new_position = waste.pos
+                    break
+            if new_position is None:
+                new_position = self.random.choice(allowed_steps)
+
         else:
             new_position = self.random.choice(allowed_steps)
         
@@ -302,7 +329,7 @@ class YellowAgent(RobotAgent):
         """
         Logique :
         1. Trouver les cases légales
-        2. Se déplacer
+        2. Se déplacer en fonction de la vision alentour du robot
         En fonction de l'état des slots, le déplacement n'est pas le même.
         """
         #trouver les cases légales
@@ -322,6 +349,8 @@ class YellowAgent(RobotAgent):
                             break
         allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
         
+        wastes_around = self.look_for_waste_around()
+
         #deplacement
         if self.slot1 and self.slot1.waste_type =="red":
             # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est) pour les déposer
@@ -337,6 +366,16 @@ class YellowAgent(RobotAgent):
             else:
                 self.put_waste()
                 new_position = self.pos
+        
+        elif wastes_around :
+            new_position = None
+            for waste in wastes_around:
+                if waste.waste_type =="yellow" and waste.pos in allowed_steps:
+                    new_position = waste.pos
+                    break
+            if new_position is None:
+                new_position = self.random.choice(allowed_steps)
+
         else:
             new_position = self.random.choice(allowed_steps)
 
@@ -353,7 +392,7 @@ class RedAgent(RobotAgent):
         """
         Logique :
         1. Trouver les cases légales
-        2. Se déplacer
+        2. Se déplacer en fonction de la vision alentour du robot
         En fonction de l'état des slots, le déplacement n'est pas le même.
         """
         #trouver les cases légales
@@ -369,6 +408,8 @@ class RedAgent(RobotAgent):
                         break
         allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
 
+        wastes_around = self.look_for_waste_around()
+
         #deplacement
         if (self.slot1 and self.slot1.waste_type =="red") or (self.slot2 and self.slot2.waste_type =="red"):
             # Si possession d'un déchet rouge, on se dirige vers la zone de disposal (sud est) pour les déposer
@@ -383,7 +424,15 @@ class RedAgent(RobotAgent):
             else:
                 new_position = (east_x_coord, self.pos[1]) # type: ignore
 
-
+        elif wastes_around :
+            new_position = None
+            for waste in wastes_around:
+                if waste.waste_type =="red" and waste.pos in allowed_steps:
+                    new_position = waste.pos
+                    break
+            if new_position is None:
+                new_position = self.random.choice(allowed_steps)
+                
         else:
             new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore
