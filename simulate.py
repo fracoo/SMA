@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v0_1"
+VERSION = "v0_2"
 """
 v0_1: 
     Initial version with random movement robots. 
