@@ -125,13 +125,32 @@ class RobotAgent(CommunicatingAgent):
         return wastes
     
     def look_for_waste_around(self):
-        near_cells = self.model.grid.get_neighborhood(
+        x, y = self.pos  # type: ignore
+        width = self.model.grid.width
+        height = self.model.grid.height
+        near_view = self.model.grid.get_neighborhood(
             self.pos,
-            moore=False,
-            include_center=False,
+            moore = True,
+            include_center=False
         )
+
+        near_view = [
+            (nx, ny)
+            for nx, ny in near_view
+            if abs(nx - x) <= 1 and abs(ny - y) <= 1
+        ]
+
+        far_view =[(x+2, y), (x-2, y), (x, y+2), (x, y-2)]
+        
+        far_view = [
+            (nx, ny)
+            for nx, ny in far_view
+            if 0 <= nx < width and 0 <= ny < height
+        ]
+
+        view = list(set(near_view + far_view))
         wastes = []
-        for cell in near_cells:
+        for cell in view:
             cell_contents = self.model.grid.get_cell_list_contents(cell)
             for agent in cell_contents:
                 if isinstance(agent, WasteAgent):
@@ -306,9 +325,32 @@ class GreenAgent(RobotAgent):
         elif wastes_around :
             new_position = None
             for waste in wastes_around:
-                if waste.waste_type =="green" and waste.pos in allowed_steps:
-                    new_position = waste.pos
-                    break
+                if waste.waste_type == "green":
+                    if waste.pos in allowed_steps:
+                        new_position = waste.pos
+                        break
+                    else:
+                        x_waste, y_waste = waste.pos
+                        x, y = self.pos # type: ignore
+                        candidates = []
+                        if x_waste < x:
+                            candidates.append((x-1, y))
+                        elif x_waste > x:
+                            candidates.append((x+1, y))
+                        
+                        if y_waste < y:
+                            candidates.append((x, y-1))
+                        elif y_waste > y:
+                            candidates.append((x, y+1))
+                            
+                        for cand in candidates:
+                            if cand in allowed_steps:
+                                new_position = cand
+                                break
+                        
+                        if new_position is not None:
+                            break 
+
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
 
@@ -370,9 +412,32 @@ class YellowAgent(RobotAgent):
         elif wastes_around :
             new_position = None
             for waste in wastes_around:
-                if waste.waste_type =="yellow" and waste.pos in allowed_steps:
-                    new_position = waste.pos
-                    break
+                if waste.waste_type == "yellow":
+                    if waste.pos in allowed_steps:
+                        new_position = waste.pos
+                        break
+                    else:
+                        x_waste, y_waste = waste.pos
+                        x, y = self.pos # type: ignore
+                        candidates = []
+                        if x_waste < x:
+                            candidates.append((x-1, y))
+                        elif x_waste > x:
+                            candidates.append((x+1, y))
+                        
+                        if y_waste < y:
+                            candidates.append((x, y-1))
+                        elif y_waste > y:
+                            candidates.append((x, y+1))
+                            
+                        for cand in candidates:
+                            if cand in allowed_steps:
+                                new_position = cand
+                                break
+                        
+                        if new_position is not None:
+                            break 
+
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
 
@@ -427,12 +492,35 @@ class RedAgent(RobotAgent):
         elif wastes_around :
             new_position = None
             for waste in wastes_around:
-                if waste.waste_type =="red" and waste.pos in allowed_steps:
-                    new_position = waste.pos
-                    break
+                if waste.waste_type == "red":
+                    if waste.pos in allowed_steps:
+                        new_position = waste.pos
+                        break
+                    else:
+                        x_waste, y_waste = waste.pos
+                        x, y = self.pos # type: ignore
+                        candidates = []
+                        if x_waste < x:
+                            candidates.append((x-1, y))
+                        elif x_waste > x:
+                            candidates.append((x+1, y))
+                        
+                        if y_waste < y:
+                            candidates.append((x, y-1))
+                        elif y_waste > y:
+                            candidates.append((x, y+1))
+                            
+                        for cand in candidates:
+                            if cand in allowed_steps:
+                                new_position = cand
+                                break
+                        
+                        if new_position is not None:
+                            break 
+
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
-                
+
         else:
             new_position = self.random.choice(allowed_steps)
         self.model.grid.move_agent(self, new_position) # type: ignore

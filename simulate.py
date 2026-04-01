@@ -31,13 +31,11 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v1_1"
+VERSION = "v1_2"
 """
-v1_1: 
-    New version with major improvements in robots behaviour.
-    They will now be able to move taking into account the position of the waste 
-    around them only. 
-    Nor memory neither communication used for the moment.
+v1_2: 
+    Compare to version1_1, version1_2 only allows robots to percieve waste using moore vison,
+    and also the orthoganal cells two steps away.
 """
 
 # Each entry: (label, params dict)
