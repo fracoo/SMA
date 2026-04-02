@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v1_2"
+VERSION = "v1_3"
 """
 v0_1: 
     Initial version with random movement robots (baseline).
@@ -50,6 +50,9 @@ v1_1:
 v1_2: 
     Compare to version1_1, version1_2  allows robots to percieve waste also in the diagonal cells around them,
     and also the orthoganal cells two steps away. Thus, they can now move more efficiently towards waste.
+v1_3:
+    We are now preventing robots from being on the same cell which is more realistic. Robots aiming to move to waste disposal zones are now not always going straight east or south east.
+    Robots also free the waste disposal zone when they don't carry waste and when they can.
 """
 
 # Each entry: (label, params dict)

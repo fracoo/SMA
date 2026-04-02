@@ -279,7 +279,7 @@ class GreenAgent(RobotAgent):
 
     def __init__(self, model):
         super().__init__(model, color="green", slot1=None, slot2=None, map_knowledge={})
-    
+
     def move(self):
         """
         Logique :
@@ -296,28 +296,53 @@ class GreenAgent(RobotAgent):
                     allowed_steps.remove(step)
                     break
         allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
-        
+
         wastes_around = self.look_for_waste_around()
+        x, y = self.pos  # type: ignore
+
+        # Pré-calcul de la case est et de sa zone (utilisé pour dépôt et libération)
+        east_cell = (x + 1, y)
+        east_contents = self.model.grid.get_cell_list_contents(east_cell)
+        radioactivity_east_cell : str | None = None
+        for agent in east_contents:
+            if isinstance(agent, Radioactivity):
+                radioactivity_east_cell = agent.zone
+                break
 
         # deplacement
         if self.slot1 and self.slot1.waste_type =="yellow" or self.slot2 and self.slot2.waste_type =="yellow":
-            # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est) pour les déposer
-            east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
-            radioactivity_east_cell : str | None = None
-            cell_contents = self.model.grid.get_cell_list_contents(east_cell)
-            for agent in cell_contents:
-                if isinstance(agent, Radioactivity):
-                    radioactivity_east_cell = agent.zone
-                    break
+            # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est)
             if radioactivity_east_cell and radioactivity_east_cell == "z1":
-                new_position = east_cell
+                # La case est est encore en z1 : essayer de s'y déplacer
+                has_robot_east = any(isinstance(a, RobotAgent) for a in east_contents)
+                if not has_robot_east:
+                    new_position = east_cell
+                else:
+                    # Case est occupée : essayer haut puis bas
+                    new_position = self.pos
+                    for cand in [(x, y + 1), (x, y - 1)]:
+                        if 0 <= cand[1] < self.model.grid.height:  # type: ignore
+                            cand_contents = self.model.grid.get_cell_list_contents(cand)
+                            if not any(isinstance(a, RobotAgent) for a in cand_contents):
+                                if any(isinstance(a, Radioactivity) and a.zone == "z1" for a in cand_contents):
+                                    new_position = cand
+                                    break
             else:
+                # On est sur la case bord extrême Est de z1 : déposer le déchet
                 # Garantit que le déchet jaune est en slot1 avant le dépôt
                 # (peut être en slot2 si reçu via receive_waste_from_other)
                 if self.slot2 and self.slot2.waste_type == "yellow":
                     self.slot1, self.slot2 = self.slot2, self.slot1
                 self.put_waste()
                 new_position = self.pos
+
+        elif radioactivity_east_cell != "z1":
+            # Libération de la case de dépôt : sur le bord est sans déchet jaune -> reculer à l'ouest pour libérer la placede dépôt
+            west_cell = (x - 1, y)
+            if west_cell in allowed_steps:
+                new_position = west_cell
+            else:
+                new_position = self.random.choice(allowed_steps)
 
         elif wastes_around :
             new_position = None
@@ -328,32 +353,31 @@ class GreenAgent(RobotAgent):
                         break
                     else:
                         x_waste, y_waste = waste.pos
-                        x, y = self.pos # type: ignore
                         candidates = []
                         if x_waste < x:
                             candidates.append((x-1, y))
                         elif x_waste > x:
                             candidates.append((x+1, y))
-                        
+
                         if y_waste < y:
                             candidates.append((x, y-1))
                         elif y_waste > y:
                             candidates.append((x, y+1))
-                            
+
                         for cand in candidates:
                             if cand in allowed_steps:
                                 new_position = cand
                                 break
-                        
+
                         if new_position is not None:
-                            break 
+                            break
 
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
 
         else:
             new_position = self.random.choice(allowed_steps)
-        
+
         self.model.grid.move_agent(self, new_position) # type: ignore
 
 
@@ -363,7 +387,7 @@ class YellowAgent(RobotAgent):
 
     def __init__(self, model):
         super().__init__(model, color="yellow", slot1=None, slot2=None, map_knowledge={})
-    
+
     def move(self):
         """
         Logique :
@@ -387,28 +411,53 @@ class YellowAgent(RobotAgent):
                             allowed_steps.remove(step)
                             break
         allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
-        
+
         wastes_around = self.look_for_waste_around()
+        x, y = self.pos  # type: ignore
+
+        # Pré-calcul de la case est et de sa zone (utilisé pour dépôt et libération)
+        east_cell = (x + 1, y)
+        east_contents = self.model.grid.get_cell_list_contents(east_cell)
+        radioactivity_east_cell : str | None = None
+        for agent in east_contents:
+            if isinstance(agent, Radioactivity):
+                radioactivity_east_cell = agent.zone
+                break
 
         #deplacement
         if self.slot1 and self.slot1.waste_type =="red" or self.slot2 and self.slot2.waste_type =="red":
-            # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est) pour les déposer
-            east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
-            radioactivity_east_cell : str | None = None
-            cell_contents = self.model.grid.get_cell_list_contents(east_cell)
-            for agent in cell_contents:
-                if isinstance(agent, Radioactivity):
-                    radioactivity_east_cell = agent.zone
-                    break
+            # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est)
             if radioactivity_east_cell and radioactivity_east_cell in ["z1", "z2"]:
-                new_position = east_cell
+                # La case est est encore en z1/z2 : essayer de s'y déplacer
+                has_robot_east = any(isinstance(a, RobotAgent) for a in east_contents)
+                if not has_robot_east:
+                    new_position = east_cell
+                else:
+                    # Case est occupée : essayer haut puis bas
+                    new_position = self.pos
+                    for cand in [(x, y + 1), (x, y - 1)]:
+                        if 0 <= cand[1] < self.model.grid.height:  # type: ignore
+                            cand_contents = self.model.grid.get_cell_list_contents(cand)
+                            if not any(isinstance(a, RobotAgent) for a in cand_contents):
+                                if any(isinstance(a, Radioactivity) and a.zone in ["z1", "z2"] for a in cand_contents):
+                                    new_position = cand
+                                    break
             else:
+                # On est sur la case bord est de z2 : déposer le déchet
                 # Garantit que le déchet rouge est en slot1 avant le dépôt
                 # (peut être en slot2 si reçu via receive_waste_from_other)
                 if self.slot2 and self.slot2.waste_type == "red":
                     self.slot1, self.slot2 = self.slot2, self.slot1
                 self.put_waste()
                 new_position = self.pos
+
+        elif radioactivity_east_cell not in ["z1", "z2"]:
+            # Libération de la case de dépôt : sur le bord est sans déchet rouge -> reculer à l'ouest pour libérer la place de dépôt
+            west_cell = (x - 1, y)
+            if west_cell in allowed_steps:
+                new_position = west_cell
+            else:
+                new_position = self.random.choice(allowed_steps)
 
         elif wastes_around :
             new_position = None
@@ -419,25 +468,24 @@ class YellowAgent(RobotAgent):
                         break
                     else:
                         x_waste, y_waste = waste.pos
-                        x, y = self.pos # type: ignore
                         candidates = []
                         if x_waste < x:
                             candidates.append((x-1, y))
                         elif x_waste > x:
                             candidates.append((x+1, y))
-                        
+
                         if y_waste < y:
                             candidates.append((x, y-1))
                         elif y_waste > y:
                             candidates.append((x, y+1))
-                            
+
                         for cand in candidates:
                             if cand in allowed_steps:
                                 new_position = cand
                                 break
-                        
+
                         if new_position is not None:
-                            break 
+                            break
 
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
@@ -475,20 +523,86 @@ class RedAgent(RobotAgent):
         allowed_steps.append(self.pos) # on ajoute la possibilité de rester sur place, pour qu'il y ait toujours une action possible même si les cases autour sont inaccessibles
 
         wastes_around = self.look_for_waste_around()
+        x, y = self.pos  # type: ignore
 
         #deplacement
         if (self.slot1 and self.slot1.waste_type =="red") or (self.slot2 and self.slot2.waste_type =="red"):
-            # Si possession d'un déchet rouge, on se dirige vers la zone de disposal (sud est) pour les déposer
-            east_x_coord = self.pos[0] + 1 # type: ignore
-            if east_x_coord >= self.model.grid.width: # type: ignore
-                south_y_coord = self.pos[1] - 1 # type: ignore
-                if south_y_coord >= self.model.grid.height: # type: ignore
-                    #le robot est sur la waste disposal zone, il ne doit pas bouger. Il n'est pas censé entrer dans la boucle de déplacement si les règles sont respectées, mais on ajoute ce cas par sécurité
-                    new_position = self.pos
+            # Si possession d'un déchet rouge, on se dirige vers la zone de disposal (sud est)
+            east_x = x + 1
+            south_y = y - 1
+            if east_x < self.model.grid.width:  # type: ignore
+                # Essayer d'aller à l'est
+                east_contents = self.model.grid.get_cell_list_contents((east_x, y))
+                has_robot_east = any(isinstance(a, RobotAgent) for a in east_contents)
+                if not has_robot_east:
+                    new_position = (east_x, y)
                 else:
-                    new_position = (self.pos[0], south_y_coord) # type: ignore
+                    # Case est occupée : essayer le sud
+                    if south_y >= 0:
+                        south_contents = self.model.grid.get_cell_list_contents((x, south_y))
+                        has_robot_south = any(isinstance(a, RobotAgent) for a in south_contents)
+                        new_position = self.pos if has_robot_south else (x, south_y)
+                    else:
+                        new_position = self.pos
             else:
-                new_position = (east_x_coord, self.pos[1]) # type: ignore
+                # À l'extrême est : essayer le sud
+                if south_y >= 0:
+                    south_contents = self.model.grid.get_cell_list_contents((x, south_y))
+                    has_robot_south = any(isinstance(a, RobotAgent) for a in south_contents)
+                    new_position = self.pos if has_robot_south else (x, south_y)
+                else:
+                    # Déjà sur la waste disposal zone, ne pas bouger
+                    new_position = self.pos
+
+        elif not (self.slot1 or self.slot2):
+            # Libération de la zone de dépôt : si le dépôt est sur la case courante, à l'est ou deux cases à l'est -> reculer à l'ouest pour libérer la zone de dépot
+            disposal_nearby = False
+            for dx in range(3):
+                cx = x + dx
+                if 0 <= cx < self.model.grid.width:  # type: ignore
+                    cell = self.model.grid.get_cell_list_contents((cx, y))
+                    if any(isinstance(a, WasteDisposalZone) for a in cell):
+                        disposal_nearby = True
+                        break
+
+            if disposal_nearby:
+                west_cell = (x - 1, y)
+                if west_cell in allowed_steps:
+                    new_position = west_cell
+                else:
+                    new_position = self.pos
+            elif wastes_around:
+                new_position = None
+                for waste in wastes_around:
+                    if waste.waste_type == "red":
+                        if waste.pos in allowed_steps:
+                            new_position = waste.pos
+                            break
+                        else:
+                            x_waste, y_waste = waste.pos
+                            candidates = []
+                            if x_waste < x:
+                                candidates.append((x-1, y))
+                            elif x_waste > x:
+                                candidates.append((x+1, y))
+
+                            if y_waste < y:
+                                candidates.append((x, y-1))
+                            elif y_waste > y:
+                                candidates.append((x, y+1))
+
+                            for cand in candidates:
+                                if cand in allowed_steps:
+                                    new_position = cand
+                                    break
+
+                            if new_position is not None:
+                                break
+
+                if new_position is None:
+                    new_position = self.random.choice(allowed_steps)
+            else:
+                new_position = self.random.choice(allowed_steps)
 
         elif wastes_around :
             new_position = None
@@ -499,29 +613,29 @@ class RedAgent(RobotAgent):
                         break
                     else:
                         x_waste, y_waste = waste.pos
-                        x, y = self.pos # type: ignore
                         candidates = []
                         if x_waste < x:
                             candidates.append((x-1, y))
                         elif x_waste > x:
                             candidates.append((x+1, y))
-                        
+
                         if y_waste < y:
                             candidates.append((x, y-1))
                         elif y_waste > y:
                             candidates.append((x, y+1))
-                            
+
                         for cand in candidates:
                             if cand in allowed_steps:
                                 new_position = cand
                                 break
-                        
+
                         if new_position is not None:
-                            break 
+                            break
 
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
 
         else:
             new_position = self.random.choice(allowed_steps)
+
         self.model.grid.move_agent(self, new_position) # type: ignore
