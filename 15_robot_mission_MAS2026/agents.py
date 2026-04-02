@@ -300,7 +300,7 @@ class GreenAgent(RobotAgent):
         wastes_around = self.look_for_waste_around()
 
         # deplacement
-        if self.slot1 and self.slot1.waste_type =="yellow":
+        if self.slot1 and self.slot1.waste_type =="yellow" or self.slot2 and self.slot2.waste_type =="yellow":
             # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est) pour les déposer
             east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
             radioactivity_east_cell : str | None = None
@@ -312,6 +312,10 @@ class GreenAgent(RobotAgent):
             if radioactivity_east_cell and radioactivity_east_cell == "z1":
                 new_position = east_cell
             else:
+                # Garantit que le déchet jaune est en slot1 avant le dépôt
+                # (peut être en slot2 si reçu via receive_waste_from_other)
+                if self.slot2 and self.slot2.waste_type == "yellow":
+                    self.slot1, self.slot2 = self.slot2, self.slot1
                 self.put_waste()
                 new_position = self.pos
 
@@ -387,7 +391,7 @@ class YellowAgent(RobotAgent):
         wastes_around = self.look_for_waste_around()
 
         #deplacement
-        if self.slot1 and self.slot1.waste_type =="red":
+        if self.slot1 and self.slot1.waste_type =="red" or self.slot2 and self.slot2.waste_type =="red":
             # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est) pour les déposer
             east_cell = (self.pos[0] + 1, self.pos[1]) # type: ignore
             radioactivity_east_cell : str | None = None
@@ -399,9 +403,13 @@ class YellowAgent(RobotAgent):
             if radioactivity_east_cell and radioactivity_east_cell in ["z1", "z2"]:
                 new_position = east_cell
             else:
+                # Garantit que le déchet rouge est en slot1 avant le dépôt
+                # (peut être en slot2 si reçu via receive_waste_from_other)
+                if self.slot2 and self.slot2.waste_type == "red":
+                    self.slot1, self.slot2 = self.slot2, self.slot1
                 self.put_waste()
                 new_position = self.pos
-        
+
         elif wastes_around :
             new_position = None
             for waste in wastes_around:
