@@ -579,8 +579,12 @@ class RedAgent(RobotAgent):
 
             if disposal_nearby:
                 west_cell = (x - 1, y)
+                north_cell = (x, y + 1)
                 if west_cell in allowed_steps:
                     new_position = west_cell
+                elif north_cell in allowed_steps:
+                    # Ouest bloqué : remonter vers le nord pour libérer la ligne y=0
+                    new_position = north_cell
                 else:
                     new_position = self.pos
             elif wastes_around:
