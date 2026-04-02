@@ -310,7 +310,7 @@ class GreenAgent(RobotAgent):
                 break
 
         # deplacement
-        if self.slot1 and self.slot1.waste_type =="yellow" or self.slot2 and self.slot2.waste_type =="yellow":
+        if (self.slot1 and self.slot1.waste_type =="yellow") or (self.slot2 and self.slot2.waste_type =="yellow"):
             # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est)
             if radioactivity_east_cell and radioactivity_east_cell == "z1":
                 # La case est est encore en z1 : essayer de s'y déplacer
@@ -426,7 +426,7 @@ class YellowAgent(RobotAgent):
                 break
 
         #deplacement
-        if self.slot1 and self.slot1.waste_type =="red" or self.slot2 and self.slot2.waste_type =="red":
+        if (self.slot1 and self.slot1.waste_type =="red") or (self.slot2 and self.slot2.waste_type =="red"):
             # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est)
             if radioactivity_east_cell and radioactivity_east_cell in ["z1", "z2"]:
                 # La case est est encore en z1/z2 : essayer de s'y déplacer

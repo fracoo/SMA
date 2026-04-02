@@ -103,7 +103,7 @@ class RobotModel(mesa.Model):
                 x = self.random.choice(list(zone_x))
                 y = self.random.randrange(self.grid.height)
                 pos_waste = (x, y)
-                if not any(isinstance(a, WasteAgent) for a in self.grid.get_cell_list_contents([pos_waste])):
+                if not any(isinstance(a, (WasteAgent, GreenAgent, YellowAgent, RedAgent)) for a in self.grid.get_cell_list_contents([pos_waste])):
                     waste_obj = WasteAgent(self, waste_type)
                     self.grid.place_agent(waste_obj, pos_waste)
                     placed += 1

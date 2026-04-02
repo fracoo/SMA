@@ -104,7 +104,7 @@ model_params = {
         "value": 2,
         "label": "Number of waste objects :",
         "min": 1,
-        "max": 30,
+        "max": 10,
         "step": 1,
     },
     "width": {
