@@ -31,12 +31,13 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v0_2"
+VERSION = "v1_1"
 """
-v0_2: 
-    Updated version with improved waste transfer logic. Adjacent robots of same types can
-    now exchange their waste, which avoid the case where every robot is stuck with
-    one waste in its slots whereas there are no more waste to pick up.
+v1_1: 
+    New version with major improvements in robots behaviour.
+    They will now be able to move taking into account the position of the waste 
+    around them only. 
+    Nor memory neither communication used for the moment.
 """
 
 # Each entry: (label, params dict)
