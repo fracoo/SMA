@@ -34,22 +34,22 @@ N_RUNS = 20  # independent runs per configuration (different seeds)
 VERSION = "v1_2"
 """
 v0_1: 
-    Initial version with random movement robots. 
+    Initial version with random movement robots (baseline).
     Robots can't exchange waste as they can only do it with robots on the same cell which is prevented.
-    Once green or yellow robots have collected two waste units (green and yellow), they combined them and drop it at the edge of the zone.
-    Once red robots have collected one red waste unit, they discard it at the waste disposal zone.
+    Once green or yellow robots have collected two waste units (green and yellow), they combined them and aim towards the edge of the zone to drop the waste.
+    Once red robots have collected one red waste unit (or more), they aim to the waste disposal zone to discard the waste.
 v0_2: 
     Updated version with improved waste transfer logic. Adjacent robots of same types can
-    now exchange their waste, which avoid the case where every robot is stuck with
-    one waste in its slots whereas there are no more waste to pick up.
+    now exchange their waste, which avoid the case where multiple robots are stuck with
+    one waste in their slots which prevents the grid from being fully cleared.
 v1_1: 
     New version with major improvements in robots behaviour.
-    They will now be able to move taking into account the position of the waste 
-    around them only. 
+    They are now able to move taking into account the position of the waste 
+    around them (top bottom west east). 
     Nor memory neither communication used for the moment.
 v1_2: 
-    Compare to version1_1, version1_2 only allows robots to percieve waste using moore vison,
-    and also the orthoganal cells two steps away.
+    Compare to version1_1, version1_2  allows robots to percieve waste also in the diagonal cells around them,
+    and also the orthoganal cells two steps away. Thus, they can now move more efficiently towards waste.
 """
 
 # Each entry: (label, params dict)
