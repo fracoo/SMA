@@ -77,7 +77,7 @@ def draw_zones(ax):
 model_params = {
     "n_green": {
         "type": "SliderInt",
-        "value": 8,
+        "value": 5,
         "label": "Number of green robots :",
         "min": 1,
         "max": 10,
@@ -85,7 +85,7 @@ model_params = {
     },
     "n_yellow": {
         "type": "SliderInt",
-        "value": 8,
+        "value": 5,
         "label": "Number of yellow robots :",
         "min": 1,
         "max": 10,
@@ -93,7 +93,7 @@ model_params = {
     },
     "n_red": {
         "type": "SliderInt",
-        "value": 8,
+        "value": 5,
         "label": "Number of red robots :",
         "min": 1,
         "max": 10,
@@ -101,7 +101,7 @@ model_params = {
     },
     "n_waste": {
         "type": "SliderInt",
-        "value": 30,
+        "value": 2,
         "label": "Number of waste objects :",
         "min": 1,
         "max": 30,
@@ -109,7 +109,7 @@ model_params = {
     },
     "width": {
         "type": "SliderInt",
-        "value": 30,
+        "value": 15,
         "label": "Width of the grid :",
         "min": 6,
         "max": 99,
@@ -121,12 +121,12 @@ model_params = {
         "label": "Height of the grid :",
         "min": 5,
         "max": 50,
-        "step": 5,
+        "step": 1,
     },
 }
 
 # Create initial model instance
-model1 = RobotModel(n_green=8, n_yellow=8, n_red=8, n_waste=30, height=15, width=30) # type: ignore
+model1 = RobotModel(n_green=5, n_yellow=5, n_red=5, n_waste=2, height=15, width=15) # type: ignore
 
 @solara.component # type: ignore
 def KnowledgeMap(model):
