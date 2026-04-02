@@ -138,20 +138,13 @@ class RobotAgent(CommunicatingAgent):
                     others.append(agent)
         return others
 
-    def pick_waste(self):
-        cell_contents = self.model.grid.get_cell_list_contents(self.pos)
-        for agent in cell_contents:
-            if isinstance(agent, WasteAgent):
-                if self.slot1 is None:
-                    self.slot1 = agent
-                    self.model.grid.remove_agent(agent) 
-                    break
-                elif self.slot2 is None:
-                    self.slot2 = agent
-                    self.model.grid.remove_agent(agent) 
-                    break
-                else:
-                    break
+    def pick_waste(self, waste: "WasteAgent"):
+        if self.slot1 is None:
+            self.slot1 = waste
+            self.model.grid.remove_agent(waste)
+        elif self.slot2 is None:
+            self.slot2 = waste
+            self.model.grid.remove_agent(waste)
          
     def combine_waste(self):
         if self.slot1 and self.slot2:
@@ -238,7 +231,7 @@ class RobotAgent(CommunicatingAgent):
             if wastes_in_cell != [] and not action:
                 for waste in wastes_in_cell:
                     if waste.waste_type == self.color:
-                        self.pick_waste()
+                        self.pick_waste(waste)
                         action = True
                         break
                 if not action:
