@@ -354,15 +354,16 @@ class GreenAgent(RobotAgent):
                     else:
                         x_waste, y_waste = waste.pos
                         candidates = []
-                        if x_waste < x:
-                            candidates.append((x-1, y))
-                        elif x_waste > x:
-                            candidates.append((x+1, y))
-
+                        # y en premier pour éviter de longer le bord est et déclencher la libération
                         if y_waste < y:
                             candidates.append((x, y-1))
                         elif y_waste > y:
                             candidates.append((x, y+1))
+
+                        if x_waste < x:
+                            candidates.append((x-1, y))
+                        elif x_waste > x:
+                            candidates.append((x+1, y))
 
                         for cand in candidates:
                             if cand in allowed_steps:
@@ -469,15 +470,16 @@ class YellowAgent(RobotAgent):
                     else:
                         x_waste, y_waste = waste.pos
                         candidates = []
-                        if x_waste < x:
-                            candidates.append((x-1, y))
-                        elif x_waste > x:
-                            candidates.append((x+1, y))
-
+                        # y en premier pour éviter de longer le bord est et déclencher la libération
                         if y_waste < y:
                             candidates.append((x, y-1))
                         elif y_waste > y:
                             candidates.append((x, y+1))
+
+                        if x_waste < x:
+                            candidates.append((x-1, y))
+                        elif x_waste > x:
+                            candidates.append((x+1, y))
 
                         for cand in candidates:
                             if cand in allowed_steps:
@@ -530,15 +532,25 @@ class RedAgent(RobotAgent):
             # Si possession d'un déchet rouge, on se dirige vers la zone de disposal (sud est)
             east_x = x + 1
             south_y = y - 1
-            if east_x < self.model.grid.width:  # type: ignore
+            north_y = y + 1
+            if y == 0 and east_x < self.model.grid.width:  # type: ignore
+                # Sur la ligne la plus au sud hors disposal : remonter d'abord vers le nord
+                if north_y < self.model.grid.height:  # type: ignore
+                    north_contents = self.model.grid.get_cell_list_contents((x, north_y))
+                    has_robot_north = any(isinstance(a, RobotAgent) for a in north_contents)
+                    new_position = self.pos if has_robot_north else (x, north_y)
+                else:
+                    new_position = self.pos
+            elif east_x < self.model.grid.width:  # type: ignore
                 # Essayer d'aller à l'est
                 east_contents = self.model.grid.get_cell_list_contents((east_x, y))
                 has_robot_east = any(isinstance(a, RobotAgent) for a in east_contents)
                 if not has_robot_east:
                     new_position = (east_x, y)
                 else:
-                    # Case est occupée : essayer le sud
-                    if south_y >= 0:
+                    # Case est occupée : essayer le sud (jamais la ligne la plus au sud hors disposal,
+                    # pour éviter de bloquer le couloir d'accès à la zone de dépôt)
+                    if south_y > 0:
                         south_contents = self.model.grid.get_cell_list_contents((x, south_y))
                         has_robot_south = any(isinstance(a, RobotAgent) for a in south_contents)
                         new_position = self.pos if has_robot_south else (x, south_y)
