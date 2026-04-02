@@ -128,12 +128,15 @@ def plot_fraction_over_time(runs_df: pd.DataFrame, out_dir: str) -> None:
 
     for ax, config in zip(axes, configs):
         sub = runs_df[runs_df["config"] == config]
-        grouped = sub.groupby("step")["fraction_disposed"]
-        mean = grouped.mean()
-        std = grouped.std().fillna(0)
+        # Forward-fill terminated runs so early-finishing runs don't drop out of the
+        # average (which would cause a spurious decrease when fast runs exit the mean).
+        pivot = sub.pivot(index="step", columns="run", values="fraction_disposed")
+        pivot = pivot.reindex(range(pivot.index.max() + 1)).ffill()
+        mean = pivot.mean(axis=1)
+        std = pivot.std(axis=1).fillna(0)
 
         ax.plot(mean.index, mean.values, label="mean")
-        ax.fill_between(mean.index, mean - std, mean + std, alpha=0.3, label="±1 std")
+        ax.fill_between(mean.index, np.maximum(mean - std, 0), mean + std, alpha=0.3, label="±1 std")
         ax.axhline(1.0, color="gray", linestyle="--", linewidth=0.8)
         ax.set_title(config, fontsize=10)
         ax.set_xlabel("Step")
@@ -170,7 +173,18 @@ def plot_cleanup_rate_comparison(summary_df: pd.DataFrame, out_dir: str) -> None
     x = np.arange(len(configs_order))
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(max(10, len(configs_order) * 1.5), 8))
 
-    bars = ax1.bar(x, means, yerr=stds, capsize=5, color="#a8d8ea", edgecolor="black")
+    means_arr = np.array(means, dtype=float)
+    stds_arr = np.array(stds, dtype=float)
+    lower_err = np.minimum(stds_arr, means_arr)  # keep lower bound >= 0
+    upper_err = stds_arr
+    bars = ax1.bar(
+        x,
+        means_arr,
+        yerr=np.vstack([lower_err, upper_err]),
+        capsize=5,
+        color="#a8d8ea",
+        edgecolor="black",
+    )
     ax1.axhline(MAX_STEPS, color="red", linestyle="--", linewidth=0.8, alpha=0.5, label=f"MAX_STEPS ({MAX_STEPS})")
     ax1.set_xticks(x)
     ax1.set_xticklabels(configs_order, rotation=25, ha="right")
