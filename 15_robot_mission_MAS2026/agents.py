@@ -29,6 +29,8 @@ class RobotAgent(CommunicatingAgent):
         self.slot2 : WasteAgent | None = slot2
         self.map_knowledge = map_knowledge
         self.sent_to: dict[str, set] = {}  # neighbor_name -> set of cells already sent
+        self.total_steps = 0
+        self.useful_steps = 0
 
 
     def allowed_steps(self):
@@ -239,15 +241,20 @@ class RobotAgent(CommunicatingAgent):
         """
         # self.visualisation()
 
+        self.total_steps += 1
+        was_useful = False
+
         cell_contents = self.model.grid.get_cell_list_contents(self.pos)
         has_waste_disposal_zone = any(isinstance(agent, WasteDisposalZone) for agent in cell_contents)
 
         if has_waste_disposal_zone and (self.slot1 or self.slot2):
             self.discard_waste()
+            was_useful = True
 
         elif self.slot1 and self.slot2:
             if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type == self.color and self.color != "red":
                 self.combine_waste()
+                was_useful = True
             else:
                 self.move()
         else:
@@ -276,6 +283,12 @@ class RobotAgent(CommunicatingAgent):
                     self.move()
             else:
                 self.move()
+
+            if action:
+                was_useful = True
+
+        if was_useful:
+            self.useful_steps += 1
 
 
 class GreenAgent(RobotAgent):

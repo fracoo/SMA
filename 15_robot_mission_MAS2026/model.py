@@ -2,8 +2,9 @@
 
 import mesa
 import random
+import numpy as np
 from objects import Radioactivity, WasteDisposalZone, WasteAgent
-from agents import GreenAgent, YellowAgent, RedAgent
+from agents import RobotAgent, GreenAgent, YellowAgent, RedAgent
 from communication.message.MessageService import MessageService
 
 
@@ -29,6 +30,9 @@ class RobotModel(mesa.Model):
         # total = 4*n_waste*1 + 2*n_waste*2 + 1*n_waste*4 = 12*n_waste
         self.total_initial_waste = 12 * n_waste
         self.waste_disposed = 0
+        self._prev_waste_disposed = 0
+        self._throughput = 0
+        self.visit_counts = np.zeros((height, width))
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
 
         # Reset and initialize the MessageService singleton before creating agents
@@ -84,6 +88,11 @@ class RobotModel(mesa.Model):
                     (a.slot1.original_count if a.slot1 else 0) + (a.slot2.original_count if a.slot2 else 0)
                     for a in m.agents if hasattr(a, "slot1")
                 ),
+                "throughput": lambda m: m._throughput,
+                "avg_utilization": lambda m: (
+                    sum(a.useful_steps / a.total_steps for a in m.agents if isinstance(a, RobotAgent) and a.total_steps > 0)
+                    / max(1, sum(1 for a in m.agents if isinstance(a, RobotAgent) and a.total_steps > 0))
+                ),
             }
         )
 
@@ -115,6 +124,12 @@ class RobotModel(mesa.Model):
     def step(self):
         """Advance the model by one step."""
         self.agents.shuffle_do("step")
+        self._throughput = self.waste_disposed - self._prev_waste_disposed
+        self._prev_waste_disposed = self.waste_disposed
+        for a in self.agents:
+            if isinstance(a, RobotAgent) and a.pos is not None:
+                x, y = a.pos
+                self.visit_counts[y][x] += 1
         self.datacollector.collect(self)
 
 

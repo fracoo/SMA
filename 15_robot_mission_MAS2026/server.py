@@ -259,12 +259,79 @@ def RobotDebugTable(model):
     solara.Markdown(text)
 
 
+@solara.component  # type: ignore
+def WasteTimeSeries(model):
+    """Courbe waste_on_grid + waste_held + waste_disposed sur le même graphe."""
+    update_counter.get()
+    df = model.datacollector.get_model_vars_dataframe()
+    if df.empty:
+        return
+    fig = Figure(figsize=(10, 3))
+    ax = fig.subplots()
+    ax.plot(df.index, df["waste_on_grid"],  label="On grid",  color="saddlebrown")
+    ax.plot(df.index, df["waste_held"],     label="Held",     color="orange")
+    ax.plot(df.index, df["waste_disposed"], label="Disposed", color="forestgreen")
+    ax.set_xlabel("Step")
+    ax.set_ylabel("Waste units")
+    ax.set_title("Pipeline des déchets")
+    ax.legend()
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig)
+
+
+@solara.component  # type: ignore
+def ThroughputChart(model):
+    """Courbe du throughput (déchets éliminés par step) avec moyenne glissante."""
+    update_counter.get()
+    df = model.datacollector.get_model_vars_dataframe()
+    if df.empty or "throughput" not in df.columns:
+        return
+    fig = Figure(figsize=(10, 3))
+    ax = fig.subplots()
+    raw = df["throughput"]
+    ax.plot(df.index, raw, alpha=0.35, color="steelblue", label="Raw")
+    rolling = raw.rolling(window=10, min_periods=1).mean()
+    ax.plot(df.index, rolling, color="steelblue", linewidth=2, label="Moy. glissante (10 steps)")
+    if "avg_utilization" in df.columns:
+        ax2 = ax.twinx()
+        ax2.plot(df.index, df["avg_utilization"], color="darkorange", linewidth=1.5,
+                 linestyle="--", label="Taux utilisation")
+        ax2.set_ylabel("Taux d'utilisation", color="darkorange")
+        ax2.set_ylim(0, 1)
+        ax2.tick_params(axis="y", labelcolor="darkorange")
+        ax2.legend(loc="upper right")
+    ax.set_xlabel("Step")
+    ax.set_ylabel("Déchets / step")
+    ax.set_title("Throughput & taux d'utilisation des robots")
+    ax.legend(loc="upper left")
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig)
+
+
+@solara.component  # type: ignore
+def VisitHeatmap(model):
+    """Heatmap de fréquentation : combien de fois chaque cellule a été visitée."""
+    update_counter.get()
+    counts = model.visit_counts
+    if counts.max() == 0:
+        return
+    fig = Figure(figsize=(8, 4))
+    ax = fig.subplots()
+    im = ax.imshow(counts, origin="lower", cmap="hot", aspect="auto")
+    fig.colorbar(im, ax=ax, label="Visites")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title("Fréquentation des cellules")
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig)
+
+
 SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 
 #Create the Dashboard
 page = SolaraViz(
     model1,
-    components=[RobotSlotsView, KnowledgeMap, RobotDebugTable],  # type: ignore
+    components=[RobotSlotsView, WasteTimeSeries, ThroughputChart, VisitHeatmap, KnowledgeMap, RobotDebugTable],  # type: ignore
     model_params=model_params,
     name="Radioactive Map",
 )
