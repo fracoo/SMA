@@ -246,7 +246,7 @@ class RobotAgent(CommunicatingAgent):
             self.discard_waste()
 
         elif self.slot1 and self.slot2:
-            if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type != "red":
+            if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type == self.color:
                 self.combine_waste()
             else:
                 self.move()
@@ -260,7 +260,7 @@ class RobotAgent(CommunicatingAgent):
                             other_waste = other.slot1 or other.slot2
                             my_waste = self.slot1 or self.slot2
                             # Ne recevoir que si le type correspond
-                            if my_waste and other_waste and my_waste.waste_type == other_waste.waste_type:
+                            if my_waste and other_waste and my_waste.waste_type == other_waste.waste_type and my_waste.waste_type == self.color:
                                 self.receive_waste_from_other(other)
                                 action = True
                                 break
