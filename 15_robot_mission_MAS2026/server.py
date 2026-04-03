@@ -244,12 +244,27 @@ def RobotSlotsView(model):
     solara.FigureMatplotlib(fig)
 
 
+@solara.component  # type: ignore
+def RobotDebugTable(model):
+    """Table de debug: liste tous les robots avec position et contenu des slots."""
+    update_counter.get()
+    rows = []
+    for a in sorted(model.agents, key=lambda a: getattr(a, 'name', str(a))):
+        if isinstance(a, RobotAgent):
+            s1 = a.slot1.waste_type if a.slot1 else "—"
+            s2 = a.slot2.waste_type if a.slot2 else "—"
+            rows.append(f"{a.get_name():<30}  pos={str(a.pos):<12}  slot1={s1:<8}  slot2={s2}")
+    step = model.steps if hasattr(model, 'steps') else "?"
+    text = f"**Step {step}**\n```\n" + "\n".join(rows) + "\n```"
+    solara.Markdown(text)
+
+
 SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 
 #Create the Dashboard
 page = SolaraViz(
     model1,
-    components=[RobotSlotsView, KnowledgeMap],  # type: ignore
+    components=[RobotSlotsView, KnowledgeMap, RobotDebugTable],  # type: ignore
     model_params=model_params,
     name="Radioactive Map",
 )
