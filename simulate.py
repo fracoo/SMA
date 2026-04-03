@@ -83,8 +83,8 @@ CONFIGS = [
 
 # Simulation helpers
 
-def run_single(params: dict, seed: int) -> tuple[pd.DataFrame, bool]:
-    """Run one simulation until cleaned or MAX_STEPS. Returns (timeseries_df, cleaned_fully)."""
+def run_single(params: dict, seed: int) -> tuple[pd.DataFrame, bool, np.ndarray]:
+    """Run one simulation until cleaned or MAX_STEPS. Returns (timeseries_df, cleaned_fully, visit_counts)."""
     model = RobotModel(**params, seed=seed)
     for _ in range(MAX_STEPS):
         if model.waste_disposed >= model.total_initial_waste:
@@ -95,24 +95,27 @@ def run_single(params: dict, seed: int) -> tuple[pd.DataFrame, bool]:
     df.index.name = "step"
     df = df.reset_index()
     cleaned = model.waste_disposed >= model.total_initial_waste
-    return df, cleaned
+    return df, cleaned, model.visit_counts.copy()
 
 
-def run_all() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Run all configurations and return (runs_df, summary_df)."""
+def run_all() -> tuple[pd.DataFrame, pd.DataFrame, dict[str, np.ndarray]]:
+    """Run all configurations and return (runs_df, summary_df, mean_visit_counts)."""
     all_runs = []
     summary_rows = []
+    visit_accum: dict[str, list[np.ndarray]] = {}
 
     for label, params in CONFIGS:
         print(f"\nConfig: {label}")
+        visit_accum[label] = []
         for run_i in range(N_RUNS):
             seed = 107 + run_i * 17
-            df, cleaned = run_single(params, seed)
+            df, cleaned, visit_counts = run_single(params, seed)
             df["config"] = label
             df["run"] = run_i
             for k, v in params.items():
                 df[k] = v
             all_runs.append(df)
+            visit_accum[label].append(visit_counts)
 
             steps_to_clean = int(df["step"].max()) if cleaned else None
             summary_rows.append({
@@ -127,7 +130,8 @@ def run_all() -> tuple[pd.DataFrame, pd.DataFrame]:
 
     runs_df = pd.concat(all_runs, ignore_index=True)
     summary_df = pd.DataFrame(summary_rows)
-    return runs_df, summary_df
+    mean_visit_counts = {label: np.mean(arrays, axis=0) for label, arrays in visit_accum.items()}
+    return runs_df, summary_df, mean_visit_counts
 
 
 # Plotting
@@ -173,18 +177,16 @@ def plot_fraction_over_time(runs_df: pd.DataFrame, out_dir: str) -> None:
 
 
 def plot_cleanup_rate_comparison(summary_df: pd.DataFrame, out_dir: str) -> None:
-    """Bar chart: mean steps to clean + % of runs that fully cleaned."""
+    """Bar chart: mean steps to clean + min steps to fully clean."""
     configs_order = [c for c, _ in CONFIGS]
 
-    means, stds, pct_cleaned = [], [], []
+    means, stds, mins = [], [], []
     for config in configs_order:
         sub = summary_df[summary_df["config"] == config]
-        # Uncleaned runs are censored at MAX_STEPS so every run is counted,
-        # avoiding the bias of averaging only the lucky successful runs.
         all_steps = sub["steps_to_clean"].fillna(MAX_STEPS)
         means.append(all_steps.mean())
         stds.append(all_steps.std() if len(all_steps) > 1 else 0)
-        pct_cleaned.append(100 * sub["cleaned"].mean())
+        mins.append(sub["steps_to_clean"].min())
 
     x = np.arange(len(configs_order))
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(max(10, len(configs_order) * 1.5), 8))
@@ -193,7 +195,7 @@ def plot_cleanup_rate_comparison(summary_df: pd.DataFrame, out_dir: str) -> None
     stds_arr = np.array(stds, dtype=float)
     lower_err = np.minimum(stds_arr, means_arr)  # keep lower bound >= 0
     upper_err = stds_arr
-    bars = ax1.bar(
+    ax1.bar(
         x,
         means_arr,
         yerr=np.vstack([lower_err, upper_err]),
@@ -201,22 +203,49 @@ def plot_cleanup_rate_comparison(summary_df: pd.DataFrame, out_dir: str) -> None
         color="#a8d8ea",
         edgecolor="black",
     )
-    ax1.axhline(MAX_STEPS, color="red", linestyle="--", linewidth=0.8, alpha=0.5, label=f"MAX_STEPS ({MAX_STEPS})")
     ax1.set_xticks(x)
     ax1.set_xticklabels(configs_order, rotation=25, ha="right")
     ax1.set_ylabel("Mean steps to clean")
-    ax1.set_title("Mean steps to fully clean (uncleaned runs counted as MAX_STEPS)")
-    ax1.legend(fontsize=8)
+    ax1.set_title("Mean steps to fully clean")
 
-    ax2.bar(x, pct_cleaned, color="#ffd3b6", edgecolor="black")
+    mins_arr = np.array(mins, dtype=float)
+    ax2.bar(x, mins_arr, color="#b8e0b0", edgecolor="black")
     ax2.set_xticks(x)
     ax2.set_xticklabels(configs_order, rotation=25, ha="right")
-    ax2.set_ylabel("% runs fully cleaned")
-    ax2.set_ylim(0, 110)
-    ax2.set_title(f"Fraction of runs fully cleaned within {MAX_STEPS} steps")
+    ax2.set_ylabel("Min steps to fully clean")
+    ax2.set_title("Minimum steps to fully clean (best run per config)")
 
     fig.tight_layout()
     path = os.path.join(out_dir, "cleanup_rate_comparison.png")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved {path}")
+
+
+def plot_visit_heatmaps(mean_visit_counts: dict[str, np.ndarray], out_dir: str) -> None:
+    """One subplot per config: mean visit frequency heatmap across runs."""
+    configs_order = [c for c, _ in CONFIGS]
+    n = len(configs_order)
+    ncols = 3
+    nrows = (n + ncols - 1) // ncols
+
+    fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
+    axes = axes.flatten()
+
+    for ax, config in zip(axes, configs_order):
+        counts = mean_visit_counts[config]
+        im = ax.imshow(counts, origin="lower", cmap="hot", aspect="auto")
+        fig.colorbar(im, ax=ax, label="Visites (moy.)")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(config, fontsize=9)
+
+    for ax in axes[n:]:
+        ax.set_visible(False)
+
+    fig.suptitle("Fréquentation moyenne des cellules par configuration", fontsize=13, y=1.01)
+    fig.tight_layout()
+    path = os.path.join(out_dir, "visit_heatmaps.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved {path}")
@@ -230,7 +259,7 @@ if __name__ == "__main__":
     print(f"Run ID: {run_id}")
 
     print("Running simulations :")
-    runs_df, summary_df = run_all()
+    runs_df, summary_df, mean_visit_counts = run_all()
 
     runs_df.to_csv(os.path.join(out_dir, "runs.csv"), index=False)
     summary_df.to_csv(os.path.join(out_dir, "summary.csv"), index=False)
@@ -239,5 +268,6 @@ if __name__ == "__main__":
     print("\nGenerating plots :")
     plot_fraction_over_time(runs_df, plots_dir)
     plot_cleanup_rate_comparison(summary_df, plots_dir)
+    plot_visit_heatmaps(mean_visit_counts, plots_dir)
 
     print("\nDone.")
