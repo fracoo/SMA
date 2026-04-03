@@ -257,9 +257,13 @@ class RobotAgent(CommunicatingAgent):
                 if others:
                     for other in others:
                         if bool(other.slot1) ^ bool(other.slot2):
-                            self.receive_waste_from_other(other)
-                            action = True
-                            break
+                            other_waste = other.slot1 or other.slot2
+                            my_waste = self.slot1 or self.slot2
+                            # Ne recevoir que si le type correspond
+                            if my_waste and other_waste and my_waste.waste_type == other_waste.waste_type:
+                                self.receive_waste_from_other(other)
+                                action = True
+                                break
 
             wastes_in_cell = self.look_for_waste_in_current_cell()
             if wastes_in_cell != [] and not action:
