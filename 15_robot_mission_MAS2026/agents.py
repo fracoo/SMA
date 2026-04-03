@@ -246,7 +246,7 @@ class RobotAgent(CommunicatingAgent):
             self.discard_waste()
 
         elif self.slot1 and self.slot2:
-            if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type == self.color:
+            if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type == self.color and self.color != "red":
                 self.combine_waste()
             else:
                 self.move()
