@@ -160,18 +160,36 @@ class RobotAgent(CommunicatingAgent):
         return wastes
 
 
-    def look_for_others(self):
+    def look_for_others(self, extended = False):
         near_view = self.model.grid.get_neighborhood(
             self.pos,
-            moore = False,
+            moore = False if not extended else True,
             include_center=False
         )
+
         others = []
         for cell in near_view :
             cell_content = self.model.grid.get_cell_list_contents(cell)
             for agent in cell_content:
                 if isinstance(agent,RobotAgent) and agent.color == self.color:
                     others.append(agent)
+        if extended:
+            #ajouter les voisins à 2 cases orthogonales de distance s'il y en a
+            x, y = self.pos #type: ignore
+            far_view = [(x+2, y), (x-2, y), (x, y+2), (x, y-2)]
+
+            far_view = [
+            (nx, ny)
+            for nx, ny in far_view
+            if 0 <= nx < self.model.grid.width and 0 <= ny < self.model.grid.height
+            ]
+
+            for cell in far_view:
+                cell_content = self.model.grid.get_cell_list_contents(cell)
+                for agent in cell_content:
+                    if isinstance(agent,RobotAgent) and agent.color == self.color:
+                        others.append(agent)
+
         return others
 
     def pick_waste(self, waste: "WasteAgent"):
@@ -237,7 +255,8 @@ class RobotAgent(CommunicatingAgent):
         2.b. Sinon, si les deux slots sont pleins et contiennent des déchets du même type (hors rouge), les combiner
         2.c. Sinon, si un des deux slots est plein, et qu'il y a un robot voisin de la même couleur, essayer de donner le déchet
         2.d. Sinon, si il y a un déchet du même type dans la case, le ramasser
-        2.e. Sinon, se déplacer
+        2.e. Sinon, si un des slots est plein et qu'il y a un robot voisin de la même couleur à proximité (non directe), s'en rapprocher.
+        2.f. Sinon, se déplacer aléatoirement parmi les cases accessibles
         """
         # self.visualisation()
 
@@ -279,6 +298,31 @@ class RobotAgent(CommunicatingAgent):
                         self.pick_waste(waste)
                         action = True
                         break
+                if not action:
+                    self.move()
+            
+            elif (self.slot1 or self.slot2) and not action:
+                others_extended = self.look_for_others(extended = True)
+                if others_extended:
+                    for other in others_extended:
+                        if bool(other.slot1) ^ bool(other.slot2):
+                            my_waste = self.slot1 or self.slot2
+                            other_waste = other.slot1 or other.slot2
+                            if my_waste and other_waste and my_waste.waste_type == other_waste.waste_type and my_waste.waste_type == self.color:
+                                # S'approcher du robot voisin pour pouvoir lui donner le déchet au tour suivant
+                                x, y = self.pos  # type: ignore
+                                other_x, other_y = other.pos
+                                dx = other_x - x
+                                dy = other_y - y
+                                if abs(dx) > abs(dy):
+                                    step = (x + np.sign(dx), y)
+                                else:
+                                    step = (x, y + np.sign(dy))
+                                if step in self.allowed_steps():
+                                    self.model.grid.move_agent(self, step) # type: ignore
+                                    action = True
+                                    break
+                
                 if not action:
                     self.move()
             else:

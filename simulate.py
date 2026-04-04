@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v1_3"
+VERSION = "v1_4"
 """
 v0_1: 
     Initial version with random movement robots (baseline).
@@ -53,7 +53,10 @@ v1_2:
 v1_3:
     We are now preventing robots from being on the same cell which is more realistic. Robots aiming to move to waste disposal zones are now not always going straight east or south east.
     Robots also free the waste disposal zone when they don't carry waste and when they can.
-"""
+v1_4:
+    We added a new behavior for robots carrying waste: if they see a robot of the same type in their extended vision (diagonal + orthogonal 2 steps away) that has an empty slot, they will try to move towards it to give it the waste.
+    This allows waste to be passed between robots faster. 
+    """
 
 # Each entry: (label, params dict)
 # n_waste = number of red waste units; total waste = 7 * n_waste (4 green + 2 yellow + 1 red)
