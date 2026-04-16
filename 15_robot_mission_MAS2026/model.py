@@ -20,7 +20,7 @@ class RobotModel(mesa.Model):
             n_waste: Number of waste agents in the simulation
             height, width: Size of the grid
         """
-        super().__init__(seed=seed)
+        super().__init__(rng=int(seed))
         self.n_green = n_green
         self.n_yellow = n_yellow
         self.n_red = n_red

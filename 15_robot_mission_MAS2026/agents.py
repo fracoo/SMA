@@ -53,70 +53,76 @@ class RobotAgent(CommunicatingAgent):
                     allowed_steps.append(step)
         return allowed_steps
 
-    def visualisation(self):
-         # On regarde les cases accessibles pour voir si on des déchets y sont présents
+    def _compute_view(self):
         x, y = self.pos  # type: ignore
         width = self.model.grid.width
         height = self.model.grid.height
+        near_view = self.model.grid.get_neighborhood(self.pos, moore=True, include_center=False)  # type: ignore
+        near_view = [(nx, ny) for nx, ny in near_view if abs(nx - x) <= 1 and abs(ny - y) <= 1]
+        far_view = [(x+2, y), (x-2, y), (x, y+2), (x, y-2)]
+        far_view = [(nx, ny) for nx, ny in far_view if 0 <= nx < width and 0 <= ny < height]
+        return list(set(near_view + far_view))
 
-        near_view = self.model.grid.get_neighborhood(
-            self.pos,
-            moore = True,
-            include_center=False
-        )
-
-        near_view = [
-            (nx, ny)
-            for nx, ny in near_view
-            if abs(nx - x) <= 1 and abs(ny - y) <= 1
-        ]
-
-        far_view =[(x+2, y), (x-2, y), (x, y+2), (x, y-2)]
-        
-        far_view = [
-            (nx, ny)
-            for nx, ny in far_view
-            if 0 <= nx < width and 0 <= ny < height
-        ]
-
-        view = list(set(near_view + far_view))
-
-        for cell in view : 
+    def visualisation(self):
+        view = self._compute_view()
+        for cell in view:
             contenu_cell = self.model.grid.get_cell_list_contents([cell])
-            has_waste_in_cell = False
-            neighbor_robot: RobotAgent | None = None
+            has_own_waste = False
             for agent in contenu_cell:
-                if isinstance(agent, WasteAgent):
-                    has_waste_in_cell = True
+                if isinstance(agent, WasteAgent) and agent.waste_type == self.color:
+                    has_own_waste = True
                     self.map_knowledge[agent.pos] = agent
-                elif isinstance(agent, RobotAgent) and agent != self:
-                    neighbor_robot = agent
-            if not has_waste_in_cell and cell in self.map_knowledge:
+            if not has_own_waste and cell in self.map_knowledge:
                 del self.map_knowledge[cell]
-            
-            # envoyer uniquement les nouvelles cellules au voisin (évite les messages redondants)
-            if neighbor_robot:
-                neighbor_name = neighbor_robot.get_name()
-                already_sent = self.sent_to.get(neighbor_name, set())
-                new_cells = {k: v for k, v in self.map_knowledge.items() if k not in already_sent}
-                if new_cells:
-                    message = Message(
-                        from_agent=self.get_name(),
-                        to_agent=neighbor_name,
-                        message_performative=MessagePerformative.INFORM_REF,
-                        content=new_cells
-                    )
-                    self.send_message(message)
-                    self.sent_to[neighbor_name] = already_sent | set(new_cells.keys())
 
-        # recevoir la connaissance de la carte des robots voisins, pour mettre à jour la connaissance de la carte sauf pour les cellules que le robot courant peut voir
+    def communicate(self):
+        """Partage map_knowledge avec les robots voisins de même couleur. Actuellement inactive."""
+        view = self._compute_view()
+        for cell in view:
+            contenu_cell = self.model.grid.get_cell_list_contents([cell])
+            for agent in contenu_cell:
+                if isinstance(agent, RobotAgent) and agent != self and agent.color == self.color:
+                    neighbor_name = agent.get_name()
+                    already_sent = self.sent_to.get(neighbor_name, set())
+                    new_cells = {k: v for k, v in self.map_knowledge.items() if k not in already_sent}
+                    if new_cells:
+                        message = Message(
+                            from_agent=self.get_name(),
+                            to_agent=neighbor_name,
+                            message_performative=MessagePerformative.INFORM_REF,
+                            content=new_cells
+                        )
+                        self.send_message(message)
+                        self.sent_to[neighbor_name] = already_sent | set(new_cells.keys())
         new_messages = self.get_new_messages()
         for message in new_messages:
             if message.get_performative() == MessagePerformative.INFORM_REF:
                 sender_map_knowledge = message.get_content()
                 for cell, waste in sender_map_knowledge.items():
-                    if cell not in view:  # Ne pas mettre à jour la connaissance pour les cellules que le robot peut voir
+                    if cell not in view:
                         self.map_knowledge[cell] = waste
+
+    def _step_toward(self, target_pos, allowed_steps):
+        """Retourne le pas dans allowed_steps qui se rapproche le plus de target_pos."""
+        x, y = self.pos  # type: ignore
+        tx, ty = target_pos
+        candidates = []
+        if tx > x: candidates.append((x+1, y))
+        elif tx < x: candidates.append((x-1, y))
+        if ty > y: candidates.append((x, y+1))
+        elif ty < y: candidates.append((x, y-1))
+        for cand in candidates:
+            if cand in allowed_steps:
+                return cand
+        return self.random.choice(allowed_steps)
+
+    def _move_toward_nearest_in_memory(self, allowed_steps):
+        """Se dirige vers le déchet le plus proche connu en mémoire (distance Manhattan)."""
+        if not self.map_knowledge:
+            return self.random.choice(allowed_steps)
+        x, y = self.pos  # type: ignore
+        nearest_pos = min(self.map_knowledge.keys(), key=lambda p: abs(p[0]-x) + abs(p[1]-y))
+        return self._step_toward(nearest_pos, allowed_steps)
     
     def look_for_waste_in_current_cell(self):
         cell_contents = self.model.grid.get_cell_list_contents(self.pos)
@@ -193,12 +199,17 @@ class RobotAgent(CommunicatingAgent):
         return others
 
     def pick_waste(self, waste: "WasteAgent"):
+        pos = waste.pos
         if self.slot1 is None:
             self.slot1 = waste
             self.model.grid.remove_agent(waste)
+            if pos in self.map_knowledge:
+                del self.map_knowledge[pos]
         elif self.slot2 is None:
             self.slot2 = waste
             self.model.grid.remove_agent(waste)
+            if pos in self.map_knowledge:
+                del self.map_knowledge[pos]
          
     def combine_waste(self):
         if self.slot1 and self.slot2:
@@ -250,15 +261,15 @@ class RobotAgent(CommunicatingAgent):
         """
         Logique :
         1. Visualisation (mise à jour de la connaissance de la carte)
-            La visualisation n'est pas utile pour la v0 des robots qui ont un déplacement aléatoire.
-        2.a. Si sur un slot de dépôt et possession d'un déchet, déposer le déchet.
-        2.b. Sinon, si les deux slots sont pleins et contiennent des déchets du même type (hors rouge), les combiner
-        2.c. Sinon, si un des deux slots est plein, et qu'il y a un robot voisin de la même couleur, essayer de donner le déchet
-        2.d. Sinon, si il y a un déchet du même type dans la case, le ramasser
-        2.e. Sinon, si un des slots est plein et qu'il y a un robot voisin de la même couleur à proximité (non directe), s'en rapprocher.
-        2.f. Sinon, se déplacer aléatoirement parmi les cases accessibles
+        2. Communication (partage de la connaissance de la carte avec les voisins). (actuellement inactive)
+        3.a. Si sur un slot de dépôt et possession d'un déchet, déposer le déchet.
+        3.b. Sinon, si les deux slots sont pleins et contiennent des déchets du même type (hors rouge), les combiner
+        3.c. Sinon, si un des deux slots est plein, et qu'il y a un robot voisin de la même couleur, essayer de donner le déchet
+        3.d. Sinon, si il y a un déchet du même type dans la case, le ramasser
+        3.e. Sinon, si un des slots est plein et qu'il y a un robot voisin de la même couleur à proximité (non directe), s'en rapprocher.
+        3.f. Sinon, se déplacer aléatoirement parmi les cases accessibles
         """
-        # self.visualisation()
+        self.visualisation()
 
         self.total_steps += 1
         was_useful = False
@@ -397,15 +408,7 @@ class GreenAgent(RobotAgent):
                 self.put_waste()
                 new_position = self.pos
 
-        elif radioactivity_east_cell != "z1":
-            # Libération de la case de dépôt : sur le bord est sans déchet jaune -> reculer à l'ouest pour libérer la placede dépôt
-            west_cell = (x - 1, y)
-            if west_cell in allowed_steps:
-                new_position = west_cell
-            else:
-                new_position = self.random.choice(allowed_steps)
-
-        elif wastes_around :
+        elif any(w.waste_type == "green" for w in wastes_around):
             new_position = None
             for waste in wastes_around:
                 if waste.waste_type == "green":
@@ -437,11 +440,21 @@ class GreenAgent(RobotAgent):
             if new_position is None:
                 new_position = self.random.choice(allowed_steps)
 
+        elif self.map_knowledge:
+            new_position = self._move_toward_nearest_in_memory(allowed_steps)
+
+        elif radioactivity_east_cell != "z1" and not (self.slot1 or self.slot2):
+            # Libération de la case de dépôt : sur le bord est, slots vides, rien à faire -> reculer à l'ouest
+            west_cell = (x - 1, y)
+            if west_cell in allowed_steps:
+                new_position = west_cell
+            else:
+                new_position = self.random.choice(allowed_steps)
+
         else:
             new_position = self.random.choice(allowed_steps)
 
         self.model.grid.move_agent(self, new_position) # type: ignore
-
 
 
 class YellowAgent(RobotAgent):
@@ -513,15 +526,7 @@ class YellowAgent(RobotAgent):
                 self.put_waste()
                 new_position = self.pos
 
-        elif radioactivity_east_cell not in ["z1", "z2"]:
-            # Libération de la case de dépôt : sur le bord est sans déchet rouge -> reculer à l'ouest pour libérer la place de dépôt
-            west_cell = (x - 1, y)
-            if west_cell in allowed_steps:
-                new_position = west_cell
-            else:
-                new_position = self.random.choice(allowed_steps)
-
-        elif wastes_around :
+        elif any(w.waste_type == "yellow" for w in wastes_around):
             new_position = None
             for waste in wastes_around:
                 if waste.waste_type == "yellow":
@@ -551,6 +556,17 @@ class YellowAgent(RobotAgent):
                             break
 
             if new_position is None:
+                new_position = self.random.choice(allowed_steps)
+
+        elif self.map_knowledge:
+            new_position = self._move_toward_nearest_in_memory(allowed_steps)
+
+        elif radioactivity_east_cell not in ["z1", "z2"] and not (self.slot1 or self.slot2):
+            # Libération de la case de dépôt : slots vides, rien à faire -> reculer à l'ouest
+            west_cell = (x - 1, y)
+            if west_cell in allowed_steps:
+                new_position = west_cell
+            else:
                 new_position = self.random.choice(allowed_steps)
 
         else:
@@ -590,45 +606,45 @@ class RedAgent(RobotAgent):
 
         #deplacement
         if (self.slot1 and self.slot1.waste_type =="red") or (self.slot2 and self.slot2.waste_type =="red"):
-            # Si possession d'un déchet rouge, on se dirige vers la zone de disposal (sud est)
-            east_x = x + 1
-            south_y = y - 1
-            north_y = y + 1
-            if y == 0 and east_x < self.model.grid.width:  # type: ignore
-                # Sur la ligne la plus au sud hors disposal : remonter d'abord vers le nord
-                if north_y < self.model.grid.height:  # type: ignore
-                    north_contents = self.model.grid.get_cell_list_contents((x, north_y))
-                    has_robot_north = any(isinstance(a, RobotAgent) for a in north_contents)
-                    new_position = self.pos if has_robot_north else (x, north_y)
+            # Si slot libre et déchet rouge visible directement, le ramassage est prioritaire sur le dépôt
+            has_free_slot = not (self.slot1 and self.slot2)
+            red_wastes_in_vision = [w for w in wastes_around if w.waste_type == "red"]
+            if has_free_slot and red_wastes_in_vision:
+                nearest = min(red_wastes_in_vision, key=lambda w: abs(w.pos[0]-x) + abs(w.pos[1]-y))
+                new_position = self._step_toward(nearest.pos, allowed_steps)
+            else:
+                # Sinon, se diriger vers la zone de disposal (sud est)
+                east_x = x + 1
+                south_y = y - 1
+                north_y = y + 1
+                if y == 0 and east_x < self.model.grid.width:  # type: ignore
+                    if north_y < self.model.grid.height:  # type: ignore
+                        north_contents = self.model.grid.get_cell_list_contents((x, north_y))
+                        has_robot_north = any(isinstance(a, RobotAgent) for a in north_contents)
+                        new_position = self.pos if has_robot_north else (x, north_y)
+                    else:
+                        new_position = self.pos
+                elif east_x < self.model.grid.width:  # type: ignore
+                    east_contents = self.model.grid.get_cell_list_contents((east_x, y))
+                    has_robot_east = any(isinstance(a, RobotAgent) for a in east_contents)
+                    if not has_robot_east:
+                        new_position = (east_x, y)
+                    else:
+                        if south_y > 0:
+                            south_contents = self.model.grid.get_cell_list_contents((x, south_y))
+                            has_robot_south = any(isinstance(a, RobotAgent) for a in south_contents)
+                            new_position = self.pos if has_robot_south else (x, south_y)
+                        else:
+                            new_position = self.pos
                 else:
-                    new_position = self.pos
-            elif east_x < self.model.grid.width:  # type: ignore
-                # Essayer d'aller à l'est
-                east_contents = self.model.grid.get_cell_list_contents((east_x, y))
-                has_robot_east = any(isinstance(a, RobotAgent) for a in east_contents)
-                if not has_robot_east:
-                    new_position = (east_x, y)
-                else:
-                    # Case est occupée : essayer le sud (jamais la ligne la plus au sud hors disposal,
-                    # pour éviter de bloquer le couloir d'accès à la zone de dépôt)
-                    if south_y > 0:
+                    if south_y >= 0:
                         south_contents = self.model.grid.get_cell_list_contents((x, south_y))
                         has_robot_south = any(isinstance(a, RobotAgent) for a in south_contents)
                         new_position = self.pos if has_robot_south else (x, south_y)
                     else:
                         new_position = self.pos
-            else:
-                # À l'extrême est : essayer le sud
-                if south_y >= 0:
-                    south_contents = self.model.grid.get_cell_list_contents((x, south_y))
-                    has_robot_south = any(isinstance(a, RobotAgent) for a in south_contents)
-                    new_position = self.pos if has_robot_south else (x, south_y)
-                else:
-                    # Déjà sur la waste disposal zone, ne pas bouger
-                    new_position = self.pos
 
         elif not (self.slot1 or self.slot2):
-            # Libération de la zone de dépôt : si le dépôt est sur la case courante, à l'est ou deux cases à l'est -> reculer à l'ouest pour libérer la zone de dépot
             disposal_nearby = False
             for dx in range(3):
                 cx = x + dx
@@ -638,17 +654,7 @@ class RedAgent(RobotAgent):
                         disposal_nearby = True
                         break
 
-            if disposal_nearby:
-                west_cell = (x - 1, y)
-                north_cell = (x, y + 1)
-                if west_cell in allowed_steps:
-                    new_position = west_cell
-                elif north_cell in allowed_steps:
-                    # Ouest bloqué : remonter vers le nord pour libérer la ligne y=0
-                    new_position = north_cell
-                else:
-                    new_position = self.pos
-            elif wastes_around:
+            if any(w.waste_type == "red" for w in wastes_around):
                 new_position = None
                 for waste in wastes_around:
                     if waste.waste_type == "red":
@@ -677,11 +683,23 @@ class RedAgent(RobotAgent):
                                 break
 
                 if new_position is None:
-                    new_position = self.random.choice(allowed_steps)
+                    new_position = self._move_toward_nearest_in_memory(allowed_steps)
+            elif self.map_knowledge:
+                new_position = self._move_toward_nearest_in_memory(allowed_steps)
+            elif disposal_nearby:
+                # Libération de la zone de dépôt : rien à faire, reculer à l'ouest pour libérer la zone
+                west_cell = (x - 1, y)
+                north_cell = (x, y + 1)
+                if west_cell in allowed_steps:
+                    new_position = west_cell
+                elif north_cell in allowed_steps:
+                    new_position = north_cell
+                else:
+                    new_position = self.pos
             else:
                 new_position = self.random.choice(allowed_steps)
 
-        elif wastes_around :
+        elif any(w.waste_type == "red" for w in wastes_around):
             new_position = None
             for waste in wastes_around:
                 if waste.waste_type == "red":
@@ -710,7 +728,10 @@ class RedAgent(RobotAgent):
                             break
 
             if new_position is None:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._move_toward_nearest_in_memory(allowed_steps)
+
+        elif self.map_knowledge:
+            new_position = self._move_toward_nearest_in_memory(allowed_steps)
 
         else:
             new_position = self.random.choice(allowed_steps)

@@ -123,10 +123,15 @@ model_params = {
         "max": 50,
         "step": 1,
     },
+    "seed": {
+        "type": "InputText",
+        "value": "107",
+        "label": "Random seed :",
+    },
 }
 
 # Create initial model instance
-model1 = RobotModel(n_green=5, n_yellow=5, n_red=5, n_waste=2, height=15, width=15) # type: ignore
+model1 = RobotModel(n_green=5, n_yellow=5, n_red=5, n_waste=2, height=15, width=15, seed=107) # type: ignore
 
 @solara.component # type: ignore
 def KnowledgeMap(model):

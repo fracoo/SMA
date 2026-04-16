@@ -31,9 +31,9 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v1_4"
+VERSION = "v2_1"
 """
-v0_1: 
+v0_1:
     Initial version with random movement robots (baseline).
     Robots can't exchange waste as they can only do it with robots on the same cell which is prevented.
     Once green or yellow robots have collected two waste units (green and yellow), they combined them and aim towards the edge of the zone to drop the waste.
@@ -55,7 +55,16 @@ v1_3:
     Robots also free the waste disposal zone when they don't carry waste and when they can.
 v1_4:
     We added a new behavior for robots carrying waste: if they see a robot of the same type in their extended vision (diagonal + orthogonal 2 steps away) that has an empty slot, they will try to move towards it to give it the waste.
-    This allows waste to be passed between robots faster. 
+    This allows waste to be passed between robots faster.
+v2_1:
+    Robots now have a memory of waste they have encountered during their exploration (map_knowledge).
+    Each robot only memorizes waste of its own color. The memory is updated every step via visualisation():
+    waste entering the field of view is added, and cells observed empty are removed.
+    When a waste is picked up, it is immediately removed from the robot's memory.
+    During movement, if no waste is visible in the direct field of view, robots navigate toward
+    the nearest memorized waste instead of moving randomly.
+    For RedAgent specifically, if it carries a waste but has a free slot and sees a red waste
+    directly, picking up that waste takes priority over heading to the disposal zone.
     """
 
 # Each entry: (label, params dict)
@@ -129,7 +138,7 @@ def run_all() -> tuple[pd.DataFrame, pd.DataFrame, dict[str, np.ndarray]]:
                 **params,
             })
             status = f"cleaned in {steps_to_clean} steps" if cleaned else f"not fully cleaned ({df['fraction_disposed'].iloc[-1]:.1%} done)"
-            print(f"  run {run_i + 1}/{N_RUNS}: {status}")
+            print(f"  run {run_i + 1}/{N_RUNS}: {status}, seed : {seed}")
 
     runs_df = pd.concat(all_runs, ignore_index=True)
     summary_df = pd.DataFrame(summary_rows)
