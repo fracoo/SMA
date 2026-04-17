@@ -164,7 +164,7 @@ Quelques jalons clés :
 - **v3_1→v5_1** : la série de trois améliorations comportementales réduit la moyenne de 372 à 242 pas (−35 %) tout en maintenant 100 % de complétion et en ramenant le pire cas de 3 947 à 2 120 pas (−46 %)
 
 
-## Structure du projet
+## 4) Structure du projet
 
 ```
 SMA/
@@ -195,7 +195,7 @@ SMA/
 ```
 
 
-## Installation
+## 5) Installation
 
 ```bash
 # Cloner / naviguer dans le projet
@@ -217,7 +217,7 @@ pip install -r requirements.txt
 - `numpy`, `networkx`, `altair`
 
 
-## Exécution
+## 6) Exécution
 
 ### Simulations en batch (génération des résultats)
 
@@ -244,7 +244,7 @@ python 15_robot_mission_MAS2026/run.py
 Ouvre un serveur Solara (généralement sur `http://localhost:8765`). Permet d'observer pas à pas le comportement des robots sur la grille, de régler les paramètres et de lancer/mettre en pause la simulation.
 
 
-## Résultats
+## 7) Résultats
 
 ### Dossiers de résultats
 
