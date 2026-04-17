@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v2_1"
+VERSION = "v2_2"
 """
 v0_1:
     Initial version with random movement robots (baseline).
@@ -65,6 +65,11 @@ v2_1:
     the nearest memorized waste instead of moving randomly.
     For RedAgent specifically, if it carries a waste but has a free slot and sees a red waste
     directly, picking up that waste takes priority over heading to the disposal zone.
+v2_2:
+    Now the robots of the same type can communicate.
+    Positions of seen watses are shared between robots of the same type. 
+    Robots can communicate with robots only one cell around them, and cells 2 times away in the orthogonal directions.
+
     """
 
 # Each entry: (label, params dict)

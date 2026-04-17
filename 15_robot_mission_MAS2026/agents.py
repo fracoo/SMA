@@ -261,7 +261,7 @@ class RobotAgent(CommunicatingAgent):
         """
         Logique :
         1. Visualisation (mise à jour de la connaissance de la carte)
-        2. Communication (partage de la connaissance de la carte avec les voisins). (actuellement inactive)
+        2. Communication (partage de la connaissance de la carte avec les voisins).
         3.a. Si sur un slot de dépôt et possession d'un déchet, déposer le déchet.
         3.b. Sinon, si les deux slots sont pleins et contiennent des déchets du même type (hors rouge), les combiner
         3.c. Sinon, si un des deux slots est plein, et qu'il y a un robot voisin de la même couleur, essayer de donner le déchet
@@ -270,6 +270,7 @@ class RobotAgent(CommunicatingAgent):
         3.f. Sinon, se déplacer aléatoirement parmi les cases accessibles
         """
         self.visualisation()
+        self.communicate()
 
         self.total_steps += 1
         was_useful = False
