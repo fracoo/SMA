@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v3_1"
+VERSION = "v4_1"
 """
 v0_1:
     Initial version with random movement robots (baseline).
@@ -72,6 +72,9 @@ v2_2:
 V3_1:
     New behaviour for robots : after discarding or dropping waste, they pick a random cell in their area that they try to move to.
     Seen waste or memory overrides this behaviour. 
+v4_1:
+    When a green/yellow robot has been wandering randomly with a single waste for 100+ steps (no waste in sight, no memory, no partner with waste nearby), it enters partner search mode: it pushes east toward the zone border to maximise the chance of meeting a same-color robot.
+    After 100 steps in that mode (counter >= 200), it reverts to normal random walk.
     """
 
 # Each entry: (label, params dict)

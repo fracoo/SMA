@@ -32,6 +32,7 @@ class RobotAgent(CommunicatingAgent):
         self.total_steps = 0
         self.useful_steps = 0
         self.target_cell: tuple | None = None
+        self.idle_with_waste_steps: int = 0
 
 
     def allowed_steps(self):
@@ -272,6 +273,21 @@ class RobotAgent(CommunicatingAgent):
                 self.model.waste_disposed += self.slot2.original_count
                 self.slot2 = None
 
+    def _partner_search_move(self, allowed_steps):
+        """Move east preferentially, never west. Used when idle_with_waste_steps in [100, 200)."""
+        x = self.pos[0]  # type: ignore
+        non_west = [s for s in allowed_steps if s[0] >= x]
+        if not non_west:
+            return self.pos
+        east = [s for s in non_west if s[0] > x]
+        if east:
+            return east[0]
+        # At east border of zone: random up/down
+        vertical = [s for s in non_west if s != self.pos]
+        if vertical:
+            return self.random.choice(vertical)
+        return self.pos
+
     def move(self):
         raise NotImplementedError
 
@@ -404,6 +420,7 @@ class GreenAgent(RobotAgent):
 
         # deplacement
         if (self.slot1 and self.slot1.waste_type =="yellow") or (self.slot2 and self.slot2.waste_type =="yellow"):
+            self.idle_with_waste_steps = 0
             # Si possession d'un déchet jaune, on se dirige vers la zone de dépôt (à l'est)
             if radioactivity_east_cell and radioactivity_east_cell == "z1":
                 # La case est est encore en z1 : essayer de s'y déplacer
@@ -432,6 +449,7 @@ class GreenAgent(RobotAgent):
                 new_position = self.pos
 
         elif any(w.waste_type == "green" for w in wastes_around):
+            self.idle_with_waste_steps = 0
             new_position = None
             for waste in wastes_around:
                 if waste.waste_type == "green":
@@ -464,9 +482,11 @@ class GreenAgent(RobotAgent):
                 new_position = self.random.choice(allowed_steps)
 
         elif self.map_knowledge:
+            self.idle_with_waste_steps = 0
             new_position = self._move_toward_nearest_in_memory(allowed_steps)
 
         elif radioactivity_east_cell != "z1" and not (self.slot1 or self.slot2):
+            self.idle_with_waste_steps = 0
             # Libération de la case de dépôt : sur le bord est, slots vides, rien à faire -> reculer à l'ouest
             west_cell = (x - 1, y)
             if west_cell in allowed_steps:
@@ -475,6 +495,7 @@ class GreenAgent(RobotAgent):
                 new_position = self.random.choice(allowed_steps)
 
         elif self.target_cell:
+            self.idle_with_waste_steps = 0
             if self.pos == self.target_cell:
                 self.target_cell = None
                 new_position = self.random.choice(allowed_steps)
@@ -482,7 +503,18 @@ class GreenAgent(RobotAgent):
                 new_position = self._step_toward(self.target_cell, allowed_steps)
 
         else:
-            new_position = self.random.choice(allowed_steps)
+            holding_one_waste = bool(self.slot1) ^ bool(self.slot2)
+            others_extended = self.look_for_others(extended=True)
+            partner_has_waste = any(o.slot1 is not None or o.slot2 is not None for o in others_extended)
+            if partner_has_waste or not holding_one_waste:
+                self.idle_with_waste_steps = 0
+            else:
+                self.idle_with_waste_steps += 1
+
+            if 100 <= self.idle_with_waste_steps < 200:
+                new_position = self._partner_search_move(allowed_steps)
+            else:
+                new_position = self.random.choice(allowed_steps)
 
         self.model.grid.move_agent(self, new_position) # type: ignore
 
@@ -531,6 +563,7 @@ class YellowAgent(RobotAgent):
 
         #deplacement
         if (self.slot1 and self.slot1.waste_type =="red") or (self.slot2 and self.slot2.waste_type =="red"):
+            self.idle_with_waste_steps = 0
             # Si possession d'un déchet rouge, on se dirige vers la zone de dépôt (à l'est)
             if radioactivity_east_cell and radioactivity_east_cell in ["z1", "z2"]:
                 # La case est est encore en z1/z2 : essayer de s'y déplacer
@@ -559,6 +592,7 @@ class YellowAgent(RobotAgent):
                 new_position = self.pos
 
         elif any(w.waste_type == "yellow" for w in wastes_around):
+            self.idle_with_waste_steps = 0
             new_position = None
             for waste in wastes_around:
                 if waste.waste_type == "yellow":
@@ -591,9 +625,11 @@ class YellowAgent(RobotAgent):
                 new_position = self.random.choice(allowed_steps)
 
         elif self.map_knowledge:
+            self.idle_with_waste_steps = 0
             new_position = self._move_toward_nearest_in_memory(allowed_steps)
 
         elif radioactivity_east_cell not in ["z1", "z2"] and not (self.slot1 or self.slot2):
+            self.idle_with_waste_steps = 0
             # Libération de la case de dépôt : slots vides, rien à faire -> reculer à l'ouest
             west_cell = (x - 1, y)
             if west_cell in allowed_steps:
@@ -602,6 +638,7 @@ class YellowAgent(RobotAgent):
                 new_position = self.random.choice(allowed_steps)
 
         elif self.target_cell:
+            self.idle_with_waste_steps = 0
             if self.pos == self.target_cell:
                 self.target_cell = None
                 new_position = self.random.choice(allowed_steps)
@@ -609,7 +646,18 @@ class YellowAgent(RobotAgent):
                 new_position = self._step_toward(self.target_cell, allowed_steps)
 
         else:
-            new_position = self.random.choice(allowed_steps)
+            holding_one_waste = bool(self.slot1) ^ bool(self.slot2)
+            others_extended = self.look_for_others(extended=True)
+            partner_has_waste = any(o.slot1 is not None or o.slot2 is not None for o in others_extended)
+            if partner_has_waste or not holding_one_waste:
+                self.idle_with_waste_steps = 0
+            else:
+                self.idle_with_waste_steps += 1
+
+            if 100 <= self.idle_with_waste_steps < 200:
+                new_position = self._partner_search_move(allowed_steps)
+            else:
+                new_position = self.random.choice(allowed_steps)
 
         self.model.grid.move_agent(self, new_position) # type: ignore
 
