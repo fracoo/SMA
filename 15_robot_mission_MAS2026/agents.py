@@ -31,6 +31,7 @@ class RobotAgent(CommunicatingAgent):
         self.sent_to: dict[str, set] = {}  # neighbor_name -> set of cells already sent
         self.total_steps = 0
         self.useful_steps = 0
+        self.target_cell: tuple | None = None
 
 
     def allowed_steps(self):
@@ -123,6 +124,23 @@ class RobotAgent(CommunicatingAgent):
         x, y = self.pos  # type: ignore
         nearest_pos = min(self.map_knowledge.keys(), key=lambda p: abs(p[0]-x) + abs(p[1]-y))
         return self._step_toward(nearest_pos, allowed_steps)
+
+    def _pick_target_in_zone(self) -> tuple:
+        """Choisit une case aléatoire dans la zone du robot, en excluant le bord est (green/yellow) et la WasteDisposalZone (red)."""
+        width = self.model.grid.width  # type: ignore
+        height = self.model.grid.height  # type: ignore
+        if self.color == "green":
+            x = self.random.randrange(0, width // 3 - 1)
+            y = self.random.randrange(0, height)
+            return (x, y)
+        elif self.color == "yellow":
+            x = self.random.randrange(width // 3, 2 * width // 3 - 1)
+            y = self.random.randrange(0, height)
+            return (x, y)
+        else:  # red — exclude y=0 row entirely (disposal zone sits there, triggers disposal_nearby loop)
+            x = self.random.randrange(2 * width // 3, width)
+            y = self.random.randrange(1, height)
+            return (x, y)
     
     def look_for_waste_in_current_cell(self):
         cell_contents = self.model.grid.get_cell_list_contents(self.pos)
@@ -281,6 +299,8 @@ class RobotAgent(CommunicatingAgent):
         if has_waste_disposal_zone and (self.slot1 or self.slot2):
             self.discard_waste()
             was_useful = True
+            if not (self.slot1 or self.slot2) and self.target_cell is None:
+                self.target_cell = self._pick_target_in_zone()
 
         elif self.slot1 and self.slot2:
             if self.slot1.waste_type == self.slot2.waste_type and self.slot1.waste_type == self.color and self.color != "red":
@@ -407,6 +427,8 @@ class GreenAgent(RobotAgent):
                 if self.slot2 and self.slot2.waste_type == "yellow":
                     self.slot1, self.slot2 = self.slot2, self.slot1
                 self.put_waste()
+                if not (self.slot1 or self.slot2) and self.target_cell is None:
+                    self.target_cell = self._pick_target_in_zone()
                 new_position = self.pos
 
         elif any(w.waste_type == "green" for w in wastes_around):
@@ -451,6 +473,13 @@ class GreenAgent(RobotAgent):
                 new_position = west_cell
             else:
                 new_position = self.random.choice(allowed_steps)
+
+        elif self.target_cell:
+            if self.pos == self.target_cell:
+                self.target_cell = None
+                new_position = self.random.choice(allowed_steps)
+            else:
+                new_position = self._step_toward(self.target_cell, allowed_steps)
 
         else:
             new_position = self.random.choice(allowed_steps)
@@ -525,6 +554,8 @@ class YellowAgent(RobotAgent):
                 if self.slot2 and self.slot2.waste_type == "red":
                     self.slot1, self.slot2 = self.slot2, self.slot1
                 self.put_waste()
+                if not (self.slot1 or self.slot2) and self.target_cell is None:
+                    self.target_cell = self._pick_target_in_zone()
                 new_position = self.pos
 
         elif any(w.waste_type == "yellow" for w in wastes_around):
@@ -569,6 +600,13 @@ class YellowAgent(RobotAgent):
                 new_position = west_cell
             else:
                 new_position = self.random.choice(allowed_steps)
+
+        elif self.target_cell:
+            if self.pos == self.target_cell:
+                self.target_cell = None
+                new_position = self.random.choice(allowed_steps)
+            else:
+                new_position = self._step_toward(self.target_cell, allowed_steps)
 
         else:
             new_position = self.random.choice(allowed_steps)
@@ -697,6 +735,18 @@ class RedAgent(RobotAgent):
                     new_position = north_cell
                 else:
                     new_position = self.pos
+            elif self.target_cell:
+                if self.pos == self.target_cell:
+                    self.target_cell = None
+                    new_position = self.random.choice(allowed_steps)
+                else:
+                    tx, _ = self.target_cell
+                    # At y=0 with an eastern target: go north first to stay off the disposal_nearby row
+                    if y == 0 and tx > x:
+                        north = (x, y + 1)
+                        new_position = north if north in allowed_steps else self.pos
+                    else:
+                        new_position = self._step_toward(self.target_cell, allowed_steps)
             else:
                 new_position = self.random.choice(allowed_steps)
 
