@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v4_1"
+VERSION = "v5_1"
 """
 v0_1:
     Initial version with random movement robots (baseline).
@@ -75,6 +75,11 @@ V3_1:
 v4_1:
     When a green/yellow robot has been wandering randomly with a single waste for 100+ steps (no waste in sight, no memory, no partner with waste nearby), it enters partner search mode: it pushes east toward the zone border to maximise the chance of meeting a same-color robot.
     After 100 steps in that mode (counter >= 200), it reverts to normal random walk.
+v5_1:
+    The random movement has been modified to be weighted.
+    The weight is computed based on how many times each cell has already been visited other robots.
+    The probability to move to a cell is inversely proportional to the number of visits, which encourages robots to explore less visited areas of the grid.
+    (Ant-like exploration strategy inspired by pheromone trails, but using visit counts as a simple proxy for "anti-pheromone" levels to promote efficient coverage of the grid and faster waste collection.
     """
 
 # Each entry: (label, params dict)
