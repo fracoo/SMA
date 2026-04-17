@@ -34,6 +34,7 @@ class RobotModel(mesa.Model):
         self._throughput = 0
         self.visit_counts = np.zeros((height, width))
         self.grid: mesa.space.MultiGrid = mesa.space.MultiGrid(width, height, True)
+        self.message_log: list[str] = []
 
         # Reset and initialize the MessageService singleton before creating agents
         MessageService._MessageService__instance = None # type: ignore

@@ -331,12 +331,23 @@ def VisitHeatmap(model):
     solara.FigureMatplotlib(fig)
 
 
+@solara.component  # type: ignore
+def CommunicationLog(model):
+    """Affiche les 20 derniers messages échangés entre agents."""
+    update_counter.get()
+    logs = getattr(model, "message_log", [])
+    recent = logs[-20:] if len(logs) > 20 else logs
+    step = model.steps if hasattr(model, "steps") else "?"
+    text = f"**Step {step} — {len(logs)} messages au total**\n```\n" + "\n".join(reversed(recent)) + "\n```"
+    solara.Markdown(text)
+
+
 SpaceGraph = make_space_component(agent_portrayal, post_process=draw_zones)
 
 #Create the Dashboard
 page = SolaraViz(
     model1,
-    components=[RobotSlotsView, WasteTimeSeries, ThroughputChart, VisitHeatmap, KnowledgeMap, RobotDebugTable],  # type: ignore
+    components=[RobotSlotsView, WasteTimeSeries, ThroughputChart, VisitHeatmap, KnowledgeMap, RobotDebugTable, CommunicationLog],  # type: ignore
     model_params=model_params,
     name="Radioactive Map",
 )
