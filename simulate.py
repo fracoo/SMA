@@ -31,7 +31,7 @@ from model import RobotModel
 
 MAX_STEPS = 5000
 N_RUNS = 20  # independent runs per configuration (different seeds)
-VERSION = "v2_2"
+VERSION = "v3_1"
 """
 v0_1:
     Initial version with random movement robots (baseline).
@@ -69,7 +69,9 @@ v2_2:
     Now the robots of the same type can communicate.
     Positions of seen watses are shared between robots of the same type. 
     Robots can communicate with robots only one cell around them, and cells 2 times away in the orthogonal directions.
-
+V3_1:
+    New behaviour for robots : after discarding or dropping waste, they pick a random cell in their area that they try to move to.
+    Seen waste or memory overrides this behaviour. 
     """
 
 # Each entry: (label, params dict)
