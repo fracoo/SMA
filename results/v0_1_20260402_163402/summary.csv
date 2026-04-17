@@ -1,0 +1,301 @@
+config,run,cleaned,steps_to_clean,n_green,n_yellow,n_red,n_waste,height,width
+1 robot/color,0,True,2133.0,1,1,1,2,15,15
+1 robot/color,1,True,3912.0,1,1,1,2,15,15
+1 robot/color,2,True,2294.0,1,1,1,2,15,15
+1 robot/color,3,True,3766.0,1,1,1,2,15,15
+1 robot/color,4,True,3138.0,1,1,1,2,15,15
+1 robot/color,5,True,1806.0,1,1,1,2,15,15
+1 robot/color,6,True,1280.0,1,1,1,2,15,15
+1 robot/color,7,True,2857.0,1,1,1,2,15,15
+1 robot/color,8,True,1629.0,1,1,1,2,15,15
+1 robot/color,9,True,2616.0,1,1,1,2,15,15
+1 robot/color,10,True,2506.0,1,1,1,2,15,15
+1 robot/color,11,True,1492.0,1,1,1,2,15,15
+1 robot/color,12,True,2559.0,1,1,1,2,15,15
+1 robot/color,13,True,3237.0,1,1,1,2,15,15
+1 robot/color,14,False,,1,1,1,2,15,15
+1 robot/color,15,True,2576.0,1,1,1,2,15,15
+1 robot/color,16,True,3715.0,1,1,1,2,15,15
+1 robot/color,17,True,2358.0,1,1,1,2,15,15
+1 robot/color,18,True,2458.0,1,1,1,2,15,15
+1 robot/color,19,True,4166.0,1,1,1,2,15,15
+3 robots/color,0,False,,3,3,3,2,15,15
+3 robots/color,1,False,,3,3,3,2,15,15
+3 robots/color,2,False,,3,3,3,2,15,15
+3 robots/color,3,False,,3,3,3,2,15,15
+3 robots/color,4,False,,3,3,3,2,15,15
+3 robots/color,5,False,,3,3,3,2,15,15
+3 robots/color,6,False,,3,3,3,2,15,15
+3 robots/color,7,False,,3,3,3,2,15,15
+3 robots/color,8,False,,3,3,3,2,15,15
+3 robots/color,9,True,861.0,3,3,3,2,15,15
+3 robots/color,10,False,,3,3,3,2,15,15
+3 robots/color,11,False,,3,3,3,2,15,15
+3 robots/color,12,False,,3,3,3,2,15,15
+3 robots/color,13,False,,3,3,3,2,15,15
+3 robots/color,14,False,,3,3,3,2,15,15
+3 robots/color,15,False,,3,3,3,2,15,15
+3 robots/color,16,False,,3,3,3,2,15,15
+3 robots/color,17,False,,3,3,3,2,15,15
+3 robots/color,18,False,,3,3,3,2,15,15
+3 robots/color,19,False,,3,3,3,2,15,15
+10 robots/color,0,False,,10,10,10,2,15,15
+10 robots/color,1,False,,10,10,10,2,15,15
+10 robots/color,2,False,,10,10,10,2,15,15
+10 robots/color,3,False,,10,10,10,2,15,15
+10 robots/color,4,False,,10,10,10,2,15,15
+10 robots/color,5,False,,10,10,10,2,15,15
+10 robots/color,6,False,,10,10,10,2,15,15
+10 robots/color,7,False,,10,10,10,2,15,15
+10 robots/color,8,False,,10,10,10,2,15,15
+10 robots/color,9,False,,10,10,10,2,15,15
+10 robots/color,10,False,,10,10,10,2,15,15
+10 robots/color,11,False,,10,10,10,2,15,15
+10 robots/color,12,False,,10,10,10,2,15,15
+10 robots/color,13,False,,10,10,10,2,15,15
+10 robots/color,14,False,,10,10,10,2,15,15
+10 robots/color,15,False,,10,10,10,2,15,15
+10 robots/color,16,False,,10,10,10,2,15,15
+10 robots/color,17,False,,10,10,10,2,15,15
+10 robots/color,18,False,,10,10,10,2,15,15
+10 robots/color,19,False,,10,10,10,2,15,15
+14 robots/color,0,False,,14,14,14,2,15,15
+14 robots/color,1,False,,14,14,14,2,15,15
+14 robots/color,2,False,,14,14,14,2,15,15
+14 robots/color,3,False,,14,14,14,2,15,15
+14 robots/color,4,False,,14,14,14,2,15,15
+14 robots/color,5,False,,14,14,14,2,15,15
+14 robots/color,6,False,,14,14,14,2,15,15
+14 robots/color,7,False,,14,14,14,2,15,15
+14 robots/color,8,False,,14,14,14,2,15,15
+14 robots/color,9,False,,14,14,14,2,15,15
+14 robots/color,10,False,,14,14,14,2,15,15
+14 robots/color,11,False,,14,14,14,2,15,15
+14 robots/color,12,False,,14,14,14,2,15,15
+14 robots/color,13,False,,14,14,14,2,15,15
+14 robots/color,14,False,,14,14,14,2,15,15
+14 robots/color,15,False,,14,14,14,2,15,15
+14 robots/color,16,False,,14,14,14,2,15,15
+14 robots/color,17,False,,14,14,14,2,15,15
+14 robots/color,18,False,,14,14,14,2,15,15
+14 robots/color,19,False,,14,14,14,2,15,15
+Narrow (w=9),0,False,,5,5,5,2,15,9
+Narrow (w=9),1,False,,5,5,5,2,15,9
+Narrow (w=9),2,False,,5,5,5,2,15,9
+Narrow (w=9),3,False,,5,5,5,2,15,9
+Narrow (w=9),4,False,,5,5,5,2,15,9
+Narrow (w=9),5,False,,5,5,5,2,15,9
+Narrow (w=9),6,False,,5,5,5,2,15,9
+Narrow (w=9),7,False,,5,5,5,2,15,9
+Narrow (w=9),8,False,,5,5,5,2,15,9
+Narrow (w=9),9,False,,5,5,5,2,15,9
+Narrow (w=9),10,False,,5,5,5,2,15,9
+Narrow (w=9),11,False,,5,5,5,2,15,9
+Narrow (w=9),12,False,,5,5,5,2,15,9
+Narrow (w=9),13,False,,5,5,5,2,15,9
+Narrow (w=9),14,False,,5,5,5,2,15,9
+Narrow (w=9),15,False,,5,5,5,2,15,9
+Narrow (w=9),16,False,,5,5,5,2,15,9
+Narrow (w=9),17,False,,5,5,5,2,15,9
+Narrow (w=9),18,False,,5,5,5,2,15,9
+Narrow (w=9),19,False,,5,5,5,2,15,9
+Medium (w=15),0,False,,5,5,5,2,15,15
+Medium (w=15),1,False,,5,5,5,2,15,15
+Medium (w=15),2,False,,5,5,5,2,15,15
+Medium (w=15),3,False,,5,5,5,2,15,15
+Medium (w=15),4,False,,5,5,5,2,15,15
+Medium (w=15),5,False,,5,5,5,2,15,15
+Medium (w=15),6,False,,5,5,5,2,15,15
+Medium (w=15),7,False,,5,5,5,2,15,15
+Medium (w=15),8,False,,5,5,5,2,15,15
+Medium (w=15),9,False,,5,5,5,2,15,15
+Medium (w=15),10,False,,5,5,5,2,15,15
+Medium (w=15),11,False,,5,5,5,2,15,15
+Medium (w=15),12,False,,5,5,5,2,15,15
+Medium (w=15),13,False,,5,5,5,2,15,15
+Medium (w=15),14,False,,5,5,5,2,15,15
+Medium (w=15),15,False,,5,5,5,2,15,15
+Medium (w=15),16,False,,5,5,5,2,15,15
+Medium (w=15),17,False,,5,5,5,2,15,15
+Medium (w=15),18,False,,5,5,5,2,15,15
+Medium (w=15),19,False,,5,5,5,2,15,15
+Wide (w=21),0,False,,5,5,5,2,15,21
+Wide (w=21),1,False,,5,5,5,2,15,21
+Wide (w=21),2,False,,5,5,5,2,15,21
+Wide (w=21),3,False,,5,5,5,2,15,21
+Wide (w=21),4,False,,5,5,5,2,15,21
+Wide (w=21),5,False,,5,5,5,2,15,21
+Wide (w=21),6,False,,5,5,5,2,15,21
+Wide (w=21),7,False,,5,5,5,2,15,21
+Wide (w=21),8,False,,5,5,5,2,15,21
+Wide (w=21),9,False,,5,5,5,2,15,21
+Wide (w=21),10,False,,5,5,5,2,15,21
+Wide (w=21),11,False,,5,5,5,2,15,21
+Wide (w=21),12,False,,5,5,5,2,15,21
+Wide (w=21),13,False,,5,5,5,2,15,21
+Wide (w=21),14,False,,5,5,5,2,15,21
+Wide (w=21),15,False,,5,5,5,2,15,21
+Wide (w=21),16,False,,5,5,5,2,15,21
+Wide (w=21),17,False,,5,5,5,2,15,21
+Wide (w=21),18,False,,5,5,5,2,15,21
+Wide (w=21),19,False,,5,5,5,2,15,21
+Very wide (w=30),0,False,,5,5,5,2,15,30
+Very wide (w=30),1,False,,5,5,5,2,15,30
+Very wide (w=30),2,False,,5,5,5,2,15,30
+Very wide (w=30),3,False,,5,5,5,2,15,30
+Very wide (w=30),4,False,,5,5,5,2,15,30
+Very wide (w=30),5,False,,5,5,5,2,15,30
+Very wide (w=30),6,False,,5,5,5,2,15,30
+Very wide (w=30),7,False,,5,5,5,2,15,30
+Very wide (w=30),8,False,,5,5,5,2,15,30
+Very wide (w=30),9,False,,5,5,5,2,15,30
+Very wide (w=30),10,False,,5,5,5,2,15,30
+Very wide (w=30),11,False,,5,5,5,2,15,30
+Very wide (w=30),12,False,,5,5,5,2,15,30
+Very wide (w=30),13,False,,5,5,5,2,15,30
+Very wide (w=30),14,False,,5,5,5,2,15,30
+Very wide (w=30),15,False,,5,5,5,2,15,30
+Very wide (w=30),16,False,,5,5,5,2,15,30
+Very wide (w=30),17,False,,5,5,5,2,15,30
+Very wide (w=30),18,False,,5,5,5,2,15,30
+Very wide (w=30),19,False,,5,5,5,2,15,30
+Short (h=6),0,False,,5,5,5,2,6,15
+Short (h=6),1,False,,5,5,5,2,6,15
+Short (h=6),2,False,,5,5,5,2,6,15
+Short (h=6),3,False,,5,5,5,2,6,15
+Short (h=6),4,False,,5,5,5,2,6,15
+Short (h=6),5,False,,5,5,5,2,6,15
+Short (h=6),6,False,,5,5,5,2,6,15
+Short (h=6),7,False,,5,5,5,2,6,15
+Short (h=6),8,False,,5,5,5,2,6,15
+Short (h=6),9,False,,5,5,5,2,6,15
+Short (h=6),10,False,,5,5,5,2,6,15
+Short (h=6),11,False,,5,5,5,2,6,15
+Short (h=6),12,False,,5,5,5,2,6,15
+Short (h=6),13,False,,5,5,5,2,6,15
+Short (h=6),14,False,,5,5,5,2,6,15
+Short (h=6),15,False,,5,5,5,2,6,15
+Short (h=6),16,False,,5,5,5,2,6,15
+Short (h=6),17,False,,5,5,5,2,6,15
+Short (h=6),18,False,,5,5,5,2,6,15
+Short (h=6),19,False,,5,5,5,2,6,15
+Medium (h=15),0,False,,5,5,5,2,15,15
+Medium (h=15),1,False,,5,5,5,2,15,15
+Medium (h=15),2,False,,5,5,5,2,15,15
+Medium (h=15),3,False,,5,5,5,2,15,15
+Medium (h=15),4,False,,5,5,5,2,15,15
+Medium (h=15),5,False,,5,5,5,2,15,15
+Medium (h=15),6,False,,5,5,5,2,15,15
+Medium (h=15),7,False,,5,5,5,2,15,15
+Medium (h=15),8,False,,5,5,5,2,15,15
+Medium (h=15),9,False,,5,5,5,2,15,15
+Medium (h=15),10,False,,5,5,5,2,15,15
+Medium (h=15),11,False,,5,5,5,2,15,15
+Medium (h=15),12,False,,5,5,5,2,15,15
+Medium (h=15),13,False,,5,5,5,2,15,15
+Medium (h=15),14,False,,5,5,5,2,15,15
+Medium (h=15),15,False,,5,5,5,2,15,15
+Medium (h=15),16,False,,5,5,5,2,15,15
+Medium (h=15),17,False,,5,5,5,2,15,15
+Medium (h=15),18,False,,5,5,5,2,15,15
+Medium (h=15),19,False,,5,5,5,2,15,15
+Tall (h=24),0,False,,5,5,5,2,24,15
+Tall (h=24),1,False,,5,5,5,2,24,15
+Tall (h=24),2,False,,5,5,5,2,24,15
+Tall (h=24),3,False,,5,5,5,2,24,15
+Tall (h=24),4,False,,5,5,5,2,24,15
+Tall (h=24),5,False,,5,5,5,2,24,15
+Tall (h=24),6,False,,5,5,5,2,24,15
+Tall (h=24),7,False,,5,5,5,2,24,15
+Tall (h=24),8,False,,5,5,5,2,24,15
+Tall (h=24),9,False,,5,5,5,2,24,15
+Tall (h=24),10,False,,5,5,5,2,24,15
+Tall (h=24),11,False,,5,5,5,2,24,15
+Tall (h=24),12,False,,5,5,5,2,24,15
+Tall (h=24),13,False,,5,5,5,2,24,15
+Tall (h=24),14,False,,5,5,5,2,24,15
+Tall (h=24),15,False,,5,5,5,2,24,15
+Tall (h=24),16,False,,5,5,5,2,24,15
+Tall (h=24),17,False,,5,5,5,2,24,15
+Tall (h=24),18,False,,5,5,5,2,24,15
+Tall (h=24),19,False,,5,5,5,2,24,15
+Very tall (h=36),0,False,,5,5,5,2,36,15
+Very tall (h=36),1,False,,5,5,5,2,36,15
+Very tall (h=36),2,False,,5,5,5,2,36,15
+Very tall (h=36),3,False,,5,5,5,2,36,15
+Very tall (h=36),4,False,,5,5,5,2,36,15
+Very tall (h=36),5,False,,5,5,5,2,36,15
+Very tall (h=36),6,False,,5,5,5,2,36,15
+Very tall (h=36),7,False,,5,5,5,2,36,15
+Very tall (h=36),8,False,,5,5,5,2,36,15
+Very tall (h=36),9,False,,5,5,5,2,36,15
+Very tall (h=36),10,False,,5,5,5,2,36,15
+Very tall (h=36),11,False,,5,5,5,2,36,15
+Very tall (h=36),12,False,,5,5,5,2,36,15
+Very tall (h=36),13,False,,5,5,5,2,36,15
+Very tall (h=36),14,False,,5,5,5,2,36,15
+Very tall (h=36),15,False,,5,5,5,2,36,15
+Very tall (h=36),16,False,,5,5,5,2,36,15
+Very tall (h=36),17,False,,5,5,5,2,36,15
+Very tall (h=36),18,False,,5,5,5,2,36,15
+Very tall (h=36),19,False,,5,5,5,2,36,15
+"Low waste (n=1, 7 total)",0,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",1,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",2,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",3,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",4,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",5,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",6,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",7,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",8,True,147.0,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",9,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",10,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",11,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",12,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",13,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",14,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",15,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",16,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",17,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",18,False,,5,5,5,1,15,15
+"Low waste (n=1, 7 total)",19,False,,5,5,5,1,15,15
+"High waste (n=4, 28 total)",0,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",1,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",2,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",3,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",4,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",5,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",6,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",7,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",8,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",9,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",10,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",11,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",12,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",13,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",14,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",15,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",16,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",17,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",18,False,,5,5,5,4,15,15
+"High waste (n=4, 28 total)",19,False,,5,5,5,4,15,15
+"Very high waste (n=10, 70 total)",0,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",1,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",2,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",3,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",4,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",5,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",6,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",7,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",8,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",9,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",10,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",11,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",12,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",13,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",14,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",15,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",16,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",17,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",18,False,,5,5,5,10,15,15
+"Very high waste (n=10, 70 total)",19,False,,5,5,5,10,15,15
