@@ -116,12 +116,12 @@ class RobotAgent(CommunicatingAgent):
         for cand in candidates:
             if cand in allowed_steps:
                 return cand
-        return self.random.choice(allowed_steps)
+        return self._weighted_random_step(allowed_steps)
 
     def _move_toward_nearest_in_memory(self, allowed_steps):
         """Se dirige vers le déchet le plus proche connu en mémoire (distance Manhattan)."""
         if not self.map_knowledge:
-            return self.random.choice(allowed_steps)
+            return self._weighted_random_step(allowed_steps)
         x, y = self.pos  # type: ignore
         nearest_pos = min(self.map_knowledge.keys(), key=lambda p: abs(p[0]-x) + abs(p[1]-y))
         return self._step_toward(nearest_pos, allowed_steps)
@@ -273,6 +273,18 @@ class RobotAgent(CommunicatingAgent):
                 self.model.waste_disposed += self.slot2.original_count
                 self.slot2 = None
 
+    def _weighted_random_step(self, candidates):
+        if len(candidates) == 1:
+            return candidates[0]
+        counts = [self.model.visit_counts[y][x] for x, y in candidates]
+        total = sum(counts)
+        if total == 0:
+            return self.random.choice(candidates)
+        weights = [total - c for c in counts]
+        if sum(weights) == 0:
+            return self.random.choice(candidates)
+        return self.random.choices(candidates, weights=weights, k=1)[0]
+
     def _partner_search_move(self, allowed_steps):
         """Move east preferentially, never west. Used when idle_with_waste_steps in [100, 200)."""
         x = self.pos[0]  # type: ignore
@@ -285,7 +297,7 @@ class RobotAgent(CommunicatingAgent):
         # At east border of zone: random up/down
         vertical = [s for s in non_west if s != self.pos]
         if vertical:
-            return self.random.choice(vertical)
+            return self._weighted_random_step(vertical)
         return self.pos
 
     def move(self):
@@ -479,7 +491,7 @@ class GreenAgent(RobotAgent):
                             break
 
             if new_position is None:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         elif self.map_knowledge:
             self.idle_with_waste_steps = 0
@@ -492,13 +504,13 @@ class GreenAgent(RobotAgent):
             if west_cell in allowed_steps:
                 new_position = west_cell
             else:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         elif self.target_cell:
             self.idle_with_waste_steps = 0
             if self.pos == self.target_cell:
                 self.target_cell = None
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
             else:
                 new_position = self._step_toward(self.target_cell, allowed_steps)
 
@@ -514,7 +526,7 @@ class GreenAgent(RobotAgent):
             if 100 <= self.idle_with_waste_steps < 200:
                 new_position = self._partner_search_move(allowed_steps)
             else:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         self.model.grid.move_agent(self, new_position) # type: ignore
 
@@ -622,7 +634,7 @@ class YellowAgent(RobotAgent):
                             break
 
             if new_position is None:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         elif self.map_knowledge:
             self.idle_with_waste_steps = 0
@@ -635,13 +647,13 @@ class YellowAgent(RobotAgent):
             if west_cell in allowed_steps:
                 new_position = west_cell
             else:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         elif self.target_cell:
             self.idle_with_waste_steps = 0
             if self.pos == self.target_cell:
                 self.target_cell = None
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
             else:
                 new_position = self._step_toward(self.target_cell, allowed_steps)
 
@@ -657,7 +669,7 @@ class YellowAgent(RobotAgent):
             if 100 <= self.idle_with_waste_steps < 200:
                 new_position = self._partner_search_move(allowed_steps)
             else:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         self.model.grid.move_agent(self, new_position) # type: ignore
 
@@ -786,7 +798,7 @@ class RedAgent(RobotAgent):
             elif self.target_cell:
                 if self.pos == self.target_cell:
                     self.target_cell = None
-                    new_position = self.random.choice(allowed_steps)
+                    new_position = self._weighted_random_step(allowed_steps)
                 else:
                     tx, _ = self.target_cell
                     # At y=0 with an eastern target: go north first to stay off the disposal_nearby row
@@ -796,7 +808,7 @@ class RedAgent(RobotAgent):
                     else:
                         new_position = self._step_toward(self.target_cell, allowed_steps)
             else:
-                new_position = self.random.choice(allowed_steps)
+                new_position = self._weighted_random_step(allowed_steps)
 
         elif any(w.waste_type == "red" for w in wastes_around):
             new_position = None
@@ -833,6 +845,6 @@ class RedAgent(RobotAgent):
             new_position = self._move_toward_nearest_in_memory(allowed_steps)
 
         else:
-            new_position = self.random.choice(allowed_steps)
+            new_position = self._weighted_random_step(allowed_steps)
 
         self.model.grid.move_agent(self, new_position) # type: ignore
